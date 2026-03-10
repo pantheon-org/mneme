@@ -26,9 +26,19 @@ export interface VaultDestination {
   fullPath: string
 }
 
+export type AuditOp =
+  | "capture"
+  | "update"
+  | "supersede"
+  | "archive"
+  | "adjudicate"
+  | "consolidate"
+
 export interface AuditEntry {
-  timestamp: string
-  action: "capture" | "retrieve" | "consolidate" | "archive" | "edit"
+  ts: string
+  op: AuditOp
   memoryId?: string
-  details?: string
+  sessionId?: string
+  harness?: string
+  detail?: string
 }

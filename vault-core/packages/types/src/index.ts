@@ -26,4 +26,5 @@ export type {
   VaultStructure,
   VaultDestination,
   AuditEntry,
+  AuditOp,
 } from "./vault.js"

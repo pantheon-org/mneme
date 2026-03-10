@@ -1,1 +1,6 @@
 export { loadConfig } from "./config.js"
+export { VaultWriter } from "./storage/vault-writer.js"
+export { VaultReader } from "./storage/vault-reader.js"
+export { IndexDB } from "./storage/index-db.js"
+export type { BM25Result, VecResult } from "./storage/index-db.js"
+export { AuditLog } from "./storage/audit-log.js"

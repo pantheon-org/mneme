@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "filename": { "pattern": "^README\\.md$" },
+    "content": {
+      "allOf": [
+        { "pattern": "# Phase" },
+        { "pattern": "## Goal" },
+        { "pattern": "## Gate" },
+        { "pattern": "## Dependencies" }
+      ]
+    }
+  }
+}

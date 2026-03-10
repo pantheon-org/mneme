@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "filename": { "pattern": "^task-P[0-9]+T[0-9]+-.*\\.md$" },
+    "content": {
+      "allOf": [
+        { "pattern": "# P[0-9]+T[0-9]+" },
+        { "pattern": "## Phase" },
+        { "pattern": "## Goal" },
+        { "pattern": "## Verification" }
+      ]
+    }
+  }
+}

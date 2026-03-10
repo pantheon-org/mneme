@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "filename": { "pattern": "^README\\.md$" },
+    "content": {
+      "allOf": [
+        { "pattern": "# (Implementation Plan|Plan)" },
+        { "pattern": "## Goal" },
+        { "pattern": "## Phases" },
+        { "pattern": "\\| # \\| Phase \\|" }
+      ]
+    }
+  }
+}

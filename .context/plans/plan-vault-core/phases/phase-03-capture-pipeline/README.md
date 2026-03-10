@@ -6,11 +6,11 @@ Async capture queue that processes raw input into scored, routed, written memori
 
 ## Gate
 
-- [ ] `capture()` returns in < 5ms under load (queue depth up to 500)
-- [ ] A 1000-word session capture is fully processed (written to vault + indexed) within 10 seconds
-- [ ] Captures with composite score < 0.45 are rejected and logged, not written
-- [ ] Conflicting incoming content (cosine similarity 0.3–0.8 vs existing) triggers adjudication, not automatic overwrite
-- [ ] `~/.vault-core/pending.jsonl` is replayed correctly after process restart (queue durability)
+- [x] `capture()` returns in < 5ms under load (queue depth up to 500)
+- [x] A 1000-word session capture is fully processed (written to vault + indexed) within 10 seconds
+- [x] Captures with composite score < 0.45 are rejected and logged, not written
+- [x] Conflicting incoming content (cosine similarity 0.3–0.8 vs existing) triggers adjudication, not automatic overwrite
+- [x] `~/.vault-core/pending.jsonl` is replayed correctly after process restart (queue durability)
 
 ## Dependencies
 

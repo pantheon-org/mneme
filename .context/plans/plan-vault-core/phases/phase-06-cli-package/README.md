@@ -6,11 +6,11 @@
 
 ## Gate
 
-- [ ] `vault-cli capture <<< "text"` writes a note and exits 0
-- [ ] `vault-cli search "query"` returns formatted results to stdout, exits 1 when no results
-- [ ] `vault-cli status` shows correct counts (tier breakdown, queue depth, pending proposals)
-- [ ] Binary works from any directory (not just inside vault-core/)
-- [ ] `bun install:cli` exits 0 and is idempotent
+- [x] `vault-cli capture <<< "text"` writes a note and exits 0
+- [x] `vault-cli search "query"` returns formatted results to stdout, exits 1 when no results
+- [x] `vault-cli status` shows correct counts (tier breakdown, queue depth, pending proposals)
+- [x] Binary works from any directory (not just inside vault-core/)
+- [x] `bun install:cli` exits 0 and is idempotent
 
 ## Dependencies
 

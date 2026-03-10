@@ -9,12 +9,14 @@
     "vault-cli": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc --build",
-    "typecheck": "tsc --noEmit",
+    "build": "bunx tsc --build",
+    "dev": "bunx tsc --watch",
+    "typecheck": "bunx tsc --noEmit",
     "install-global": "bun link"
   },
   "dependencies": {
     "@vault-core/core": "workspace:*",
-    "@vault-core/types": "workspace:*"
+    "@vault-core/types": "workspace:*",
+    "commander": "^14.0.0"
   }
 }

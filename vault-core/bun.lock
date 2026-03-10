@@ -5,6 +5,7 @@
     "": {
       "name": "vault-core-monorepo",
       "dependencies": {
+        "commander": "14.0.3",
         "sqlite-vec": "0.1.7-alpha.2",
         "yaml": "2.8.2",
       },
@@ -23,6 +24,7 @@
       "dependencies": {
         "@vault-core/core": "workspace:*",
         "@vault-core/types": "workspace:*",
+        "commander": "^14.0.0",
       },
     },
     "packages/core": {
@@ -70,6 +72,8 @@
     "@vault-core/types": ["@vault-core/types@workspace:packages/types"],
 
     "bun-types": ["bun-types@1.3.10", "", { "dependencies": { "@types/node": "*" } }, "sha512-tcpfCCl6XWo6nCVnpcVrxQ+9AYN1iqMIzgrSKYMB/fjLtV2eyAVEg7AxQJuCq/26R6HpKWykQXuSOq/21RYcbg=="],
+
+    "commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
     "smol-toml": ["smol-toml@1.6.0", "", {}, "sha512-4zemZi0HvTnYwLfrpk/CF9LOd9Lt87kAt50GnqhMpyF9U3poDAP2+iukq2bZsO/ufegbYehBkqINbsWxj4l4cw=="],
 

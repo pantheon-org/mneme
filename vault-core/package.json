@@ -17,6 +17,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
+    "commander": "14.0.3",
     "sqlite-vec": "0.1.7-alpha.2",
     "yaml": "2.8.2"
   }

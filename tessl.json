@@ -1,0 +1,33 @@
+{
+  "name": "my-project",
+  "mode": "vendored",
+  "dependencies": {
+    "pantheon-ai/implementation-planner": {
+      "version": "0.4.0"
+    },
+    "pantheon-ai/biome-complete": {
+      "version": "0.1.1"
+    },
+    "pantheon-ai/agents-md": {
+      "version": "0.1.3"
+    },
+    "pantheon-ai/software-design-principles": {
+      "version": "0.1.4"
+    },
+    "pantheon-ai/bun-development": {
+      "version": "0.1.1"
+    },
+    "pantheon-ai/typescript-advanced": {
+      "version": "0.1.1"
+    },
+    "wshobson/agents": {
+      "version": "a6f0f457c4e41cbb0ad329b691d28e255a829210",
+      "source": "https://github.com/wshobson/agents",
+      "include": {
+        "skills": [
+          "architecture-decision-records"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@vault-core/hook-claude-code",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "install-hooks": "bun run src/install.ts"
+  },
+  "dependencies": {
+    "@vault-core/core": "workspace:*",
+    "@vault-core/types": "workspace:*"
+  }
+}

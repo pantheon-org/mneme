@@ -8,7 +8,7 @@ A locally-installable TypeScript monorepo that provides psychology-grounded, Obs
 
 | # | Phase | Status | Tasks |
 |---|---|---|---|
-| 00 | [monorepo-bootstrap](phases/phase-00-monorepo-bootstrap/README.md) | pending | 3 |
+| 00 | [monorepo-bootstrap](phases/phase-00-monorepo-bootstrap/README.md) | in-progress | 3 |
 | 01 | [types-package](phases/phase-01-types-package/README.md) | pending | 2 |
 | 02 | [storage-layer](phases/phase-02-storage-layer/README.md) | pending | 4 |
 | 03 | [capture-pipeline](phases/phase-03-capture-pipeline/README.md) | pending | 4 |

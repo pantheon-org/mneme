@@ -1,0 +1,20 @@
+{
+  "name": "@vault-core/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "vault-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "install-global": "bun link"
+  },
+  "dependencies": {
+    "@vault-core/core": "workspace:*",
+    "@vault-core/types": "workspace:*"
+  }
+}

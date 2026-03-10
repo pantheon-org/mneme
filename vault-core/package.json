@@ -1,0 +1,18 @@
+{
+  "name": "vault-core-monorepo",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "bun --filter '*' run build",
+    "dev": "bun --filter '*' run dev",
+    "test": "bun test",
+    "typecheck": "bun --filter '*' run typecheck",
+    "install:hooks": "bun --filter @vault-core/hook-claude-code run install-hooks && bun --filter @vault-core/hook-opencode run install-plugin",
+    "install:skills": "bun run scripts/install-skills.ts",
+    "install:cli": "bun --filter @vault-core/cli run install-global"
+  },
+  "devDependencies": {
+    "@types/node": "25.4.0",
+    "typescript": "5.9.3"
+  }
+}

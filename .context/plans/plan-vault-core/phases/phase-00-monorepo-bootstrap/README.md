@@ -6,10 +6,10 @@ Scaffold the Bun workspace monorepo with all package directories, shared TypeScr
 
 ## Gate
 
-- [ ] `bun install` exits 0 with all workspace packages linked
-- [ ] `bun run build` exits 0 (no TS errors) across all packages
+- [x] `bun install` exits 0 with all workspace packages linked
+- [x] `bun run build` exits 0 (no TS errors) across all packages
 - [ ] `bun install:cli` exits 0 and `vault-cli --version` works from any directory
-- [ ] `~/.vault-core/config.toml` is auto-generated on first run with correct defaults
+- [x] `~/.vault-core/config.toml` is auto-generated on first run with correct defaults
 
 ## Dependencies
 

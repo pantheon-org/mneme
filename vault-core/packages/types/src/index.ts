@@ -1,25 +1,29 @@
-export interface VaultCoreConfig {
-  vault_path: string
-  index_path: string
-  harness: string
-  inference_command: string
-  embedding_model: string
-  capture_threshold: number
-  top_k_retrieval: number
-  scoring_weights: {
-    recency: number
-    frequency: number
-    importance: number
-    utility: number
-    novelty: number
-    confidence: number
-    interference: number
-  }
-  vault_structure: {
-    inbox: string
-    episodic: string
-    semantic: string
-    procedural: string
-    archive: string
-  }
-}
+export type {
+  Memory,
+  MemoryTier,
+  MemoryScope,
+  MemoryStatus,
+  MemoryCategory,
+} from "./memory.js"
+
+export type {
+  CaptureInput,
+  CaptureHints,
+  DetectionSignal,
+  MemoryCandidate,
+} from "./capture.js"
+
+export type { ScoringWeights, ImportanceScore } from "./scoring.js"
+
+export type {
+  RetrievalQuery,
+  RankedMemory,
+  InjectionBlock,
+} from "./retrieval.js"
+
+export type {
+  VaultCoreConfig,
+  VaultStructure,
+  VaultDestination,
+  AuditEntry,
+} from "./vault.js"

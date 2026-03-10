@@ -6,9 +6,9 @@ Publish `@vault-core/types` — the shared contract used by every other package.
 
 ## Gate
 
-- [ ] `bun run typecheck` passes across all packages referencing `@vault-core/types`
-- [ ] Breaking a type in `@vault-core/types` causes a compile-time error (not runtime) in downstream packages
-- [ ] All interfaces fully exported from `packages/types/src/index.ts`
+- [x] `bun run typecheck` passes across all packages referencing `@vault-core/types`
+- [x] Breaking a type in `@vault-core/types` causes a compile-time error (not runtime) in downstream packages
+- [x] All interfaces fully exported from `packages/types/src/index.ts`
 
 ## Dependencies
 

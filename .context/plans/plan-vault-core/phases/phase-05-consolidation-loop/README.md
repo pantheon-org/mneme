@@ -6,10 +6,10 @@ Periodically cluster episodic memories and propose semantic promotions; surface 
 
 ## Gate
 
-- [ ] Proposer clusters 3+ episodic memories about the same topic and writes a proposal to `00-inbox/consolidation-proposals.md`
-- [ ] `vault-cli consolidate --apply` writes approved semantic notes with correct frontmatter
-- [ ] Source episodic memories are marked `superseded`, not deleted
-- [ ] Rejected proposals are archived to audit log — not deleted, full provenance preserved
+- [x] Proposer clusters 3+ episodic memories about the same topic and writes a proposal to `00-inbox/consolidation-proposals.md`
+- [x] `vault-cli consolidate --apply` writes approved semantic notes with correct frontmatter
+- [x] Source episodic memories are marked `superseded`, not deleted
+- [x] Rejected proposals are archived to audit log — not deleted, full provenance preserved
 
 ## Dependencies
 

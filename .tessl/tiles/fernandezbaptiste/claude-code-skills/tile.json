@@ -1,0 +1,53 @@
+{
+  "name": "fernandezbaptiste/claude-code-skills",
+  "version": "4f0eae8221589f1757e325e679860e7b44595641",
+  "summary": "Auto-generated tile from GitHub (37 skills)",
+  "private": true,
+  "skills": {
+    "deep-research": {
+      "path": "deep-research/SKILL.md"
+    },
+    "docs-cleaner": {
+      "path": "docs-cleaner/SKILL.md"
+    }
+  },
+  "excludes": {
+    "skills": [
+      "claude-code-history-files-finder",
+      "claude-md-progressive-disclosurer",
+      "claude-skills-troubleshooting",
+      "cli-demo-generator",
+      "cloudflare-troubleshooting",
+      "developing-ios-apps",
+      "fact-checker",
+      "github-contributor",
+      "github-ops",
+      "i18n-expert",
+      "llm-icon-finder",
+      "macos-cleaner",
+      "markdown-tools",
+      "meeting-minutes-taker",
+      "mermaid-tools",
+      "pdf-creator",
+      "ppt-creator",
+      "product-analysis",
+      "prompt-optimizer",
+      "promptfoo-evaluation",
+      "qa-expert",
+      "repomix-safe-mixer",
+      "repomix-unmixer",
+      "skill-creator",
+      "skill-reviewer",
+      "skills-search",
+      "statusline-generator",
+      "teams-channel-post-writer",
+      "transcript-fixer",
+      "tunnel-doctor",
+      "twitter-reader",
+      "ui-designer",
+      "video-comparer",
+      "windows-remote-desktop-connection-doctor",
+      "youtube-downloader"
+    ]
+  }
+}

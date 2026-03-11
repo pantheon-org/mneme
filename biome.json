@@ -17,7 +17,32 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity": {
+        "useArrowFunction": "error"
+      },
+      "nursery": {
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 110,
+            "skipBlankLines": true
+          }
+        }
+      },
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "jest": "Use bun:test instead of jest",
+              "vitest": "Use bun:test instead of vitest",
+              "better-sqlite3": "Use bun:sqlite instead of better-sqlite3",
+              "@jest/globals": "Use bun:test instead of jest"
+            }
+          }
+        }
+      }
     }
   },
   "javascript": {
@@ -29,7 +54,36 @@
   },
   "overrides": [
     {
-      "includes": ["vault-core/**/*.ts", "vault-core/**/*.tsx"]
+      "includes": ["vault-core/**/*.ts", "vault-core/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "useArrowFunction": "error"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+                "maxLines": 110,
+                "skipBlankLines": true
+              }
+            }
+          },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "jest": "Use bun:test instead of jest",
+                  "vitest": "Use bun:test instead of vitest",
+                  "better-sqlite3": "Use bun:sqlite instead of better-sqlite3",
+                  "@jest/globals": "Use bun:test instead of jest"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

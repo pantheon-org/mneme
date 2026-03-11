@@ -39,10 +39,15 @@ Always run `bun run typecheck` after making changes. Run `bun test` to verify in
 ## Code conventions
 
 - **Language**: TypeScript with strict mode (`strict: true`, `exactOptionalPropertyTypes: true`, `noUncheckedIndexedAccess: true`)
-- **Runtime**: Bun — use `bun:sqlite` (not `better-sqlite3`), use `bun:test` (not Jest/Vitest)
+- **Runtime**: Bun — use `bun:sqlite` (not `better-sqlite3`), use `bun:test` (not Jest/Vitest). Biome enforces this via `noRestrictedImports`.
 - **Module system**: `NodeNext` — use `.js` extensions in imports even for `.ts` source files
 - **No comments**: do not add comments to code unless explicitly requested
 - **No unused imports**: TypeScript strict mode will flag these
+- **Arrow functions**: prefer arrow functions (`const f = () => {}`) over named function declarations (`function f() {}`). Enforced by Biome `complexity/useArrowFunction`.
+- **One exported function per module**: each source file should export at most one primary function or class. Extract helpers to their own files.
+- **Max 110 non-blank lines per file**: enforced by Biome `nursery/noExcessiveLinesPerFile` (`maxLines: 110, skipBlankLines: true`).
+- **Test colocation**: unit/colocated tests live next to the source file they test (e.g. `sweep-scan.test.ts` beside `sweep.ts`). Integration tests live in `packages/core/src/__tests__/integration/`.
+- **Test coverage**: maintain >90% line coverage. Run `bun test --coverage` to check. This is not automatically enforced — verify manually before merging.
 
 ### Import style
 
@@ -56,7 +61,8 @@ Use `import type` for type-only imports.
 ### File naming
 
 - Source files: `kebab-case.ts`
-- Test files: `T<nn>-description.test.ts` (see existing test suite)
+- Test files colocated with source: `<source-file-name>.test.ts` or `<source-file-name>-<describe>.test.ts`
+- Integration test files: `T<nn>-description.test.ts` (see existing test suite)
 
 ## Package locations
 
@@ -85,7 +91,8 @@ Use `import type` for type-only imports.
 | `packages/core/src/consolidation/proposer.ts` | Episodic clustering |
 | `packages/core/src/consolidation/adjudicator.ts` | LLM-based conflict resolution |
 | `packages/core/src/consolidation/approval.ts` | Human approval via vault inbox |
-| `packages/cli/src/index.ts` | All CLI commands |
+| `packages/cli/src/index.ts` | CLI entry point — registers commands from `commands/` |
+| `packages/cli/src/commands/` | One file per CLI command |
 | `packages/hook-claude-code/src/session-start.ts` | SessionStart hook entry point |
 | `packages/hook-claude-code/src/post-tool.ts` | PostToolUse hook entry point |
 | `packages/hook-claude-code/src/session-stop.ts` | Stop hook entry point |

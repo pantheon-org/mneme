@@ -30,7 +30,7 @@ describe("T04: conflict detection", () => {
     const mem = makeMemory();
     mem.embedding = makeEmbedding(0.3);
     db.upsert(mem);
-    expect(() => db.upsertVector(mem.id, mem.embedding!)).not.toThrow();
+    expect(() => db.upsertVector(mem.id, mem.embedding ?? [])).not.toThrow();
   });
 
   it("BM25 fallback detects highly similar content as low-novelty", () => {

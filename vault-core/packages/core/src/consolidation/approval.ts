@@ -2,34 +2,13 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
-
-const VALID_CATEGORIES: MemoryCategory[] = [
-  "decision",
-  "constraint",
-  "pattern",
-  "bugfix",
-  "discovery",
-  "preference",
-];
-const VALID_SCOPES: MemoryScope[] = ["user", "project"];
-
-function validCategory(v: unknown): MemoryCategory {
-  if (typeof v === "string" && (VALID_CATEGORIES as string[]).includes(v))
-    return v as MemoryCategory;
-  return "discovery";
-}
-
-function validScope(v: unknown): MemoryScope {
-  if (typeof v === "string" && (VALID_SCOPES as string[]).includes(v)) return v as MemoryScope;
-  return "user";
-}
-
+import type { Memory } from "@vault-core/types";
 import { parse, stringify } from "yaml";
 import type { AuditLog } from "../storage/audit-log.js";
 import type { IndexDB } from "../storage/index-db.js";
 import type { VaultWriter } from "../storage/vault-writer.js";
 import type { ConsolidationProposal } from "./proposer.js";
+import { validCategory, validScope } from "./validation-helpers.js";
 
 const PROPOSALS_FILE = "00-inbox/consolidation-proposals.md";
 
@@ -76,7 +55,7 @@ export class ApprovalInterface {
       const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(block.trim());
       if (!match) continue;
 
-      const fm = parse(match[1]!) as Record<string, unknown>;
+      const fm = parse(match[1] ?? "") as Record<string, unknown>;
       const content = (match[2] as string).trim();
       const status = fm.status as string;
 
@@ -95,9 +74,9 @@ export class ApprovalInterface {
       }
     }
 
-    const tmp = join(tmpdir(), `vault-proposals-clear-${Date.now()}.tmp`);
-    writeFileSync(tmp, "", "utf-8");
-    renameSync(tmp, filePath);
+    const clearTmp = join(tmpdir(), `vault-proposals-clear-${Date.now()}.tmp`);
+    writeFileSync(clearTmp, "", "utf-8");
+    renameSync(clearTmp, filePath);
     return { approved, rejected };
   }
 

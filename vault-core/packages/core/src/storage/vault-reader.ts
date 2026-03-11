@@ -12,7 +12,7 @@ export class VaultReader {
     const match = FRONTMATTER_RE.exec(raw);
     if (!match) throw new Error(`No frontmatter in ${filePath}`);
 
-    const fm = parse(match[1]!) as Record<string, unknown>;
+    const fm = parse(match[1] ?? "") as Record<string, unknown>;
     const content = (match[2] as string).trim();
 
     const updatedMs = Date.parse(fm.updated_at as string);

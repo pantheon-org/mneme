@@ -1,13 +1,13 @@
-import { randomUUID } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { CaptureInput, Memory, MemoryScope, MemoryTier } from "@vault-core/types";
+import type { CaptureInput } from "@vault-core/types";
 import type { Embedder } from "../scoring/embedder.js";
 import type { Scorer } from "../scoring/scorer.js";
 import type { AuditLog } from "../storage/audit-log.js";
 import type { IndexDB } from "../storage/index-db.js";
 import type { VaultWriter } from "../storage/vault-writer.js";
+import { buildMemory } from "./build-memory.js";
 import type { ContextSweep } from "./sweep.js";
 import { inferCategory } from "./sweep.js";
 
@@ -61,7 +61,8 @@ export class CaptureQueue {
       const candidates = this.sweep.scan(input);
       if (candidates.length === 0) continue;
 
-      const candidate = candidates[0]!;
+      const candidate = candidates[0];
+      if (!candidate) continue;
 
       const texts = [candidate.content];
       let embedding: number[] | undefined;
@@ -107,39 +108,6 @@ export class CaptureQueue {
   destroy(): void {
     if (this.timer !== null) clearInterval(this.timer);
   }
-}
-
-function buildMemory(input: CaptureInput, compositeScore: number, embedding?: number[]): Memory {
-  const id = `mem_${randomUUID()}`;
-  const tier: MemoryTier = input.hints?.tier ?? "episodic";
-  const scope: MemoryScope = input.projectId ? "project" : "user";
-  const now = new Date().toISOString();
-
-  const mem: Memory = {
-    id,
-    tier,
-    scope,
-    category: input.hints?.category ?? "discovery",
-    status: "active",
-    summary: input.content.slice(0, 120).replace(/\n/g, " "),
-    content: input.content,
-    tags: input.hints?.tags ?? [],
-    strength: compositeScore,
-    importanceScore: compositeScore,
-    frequencyCount: 1,
-    sourceType: input.sourceType,
-    capturedAt: now,
-    updatedAt: now,
-    humanEditedAt: null,
-    filePath: "",
-  };
-
-  if (input.projectId) mem.projectId = input.projectId;
-  if (input.sourceHarness) mem.sourceHarness = input.sourceHarness;
-  if (input.sourceSession) mem.sourceSession = input.sourceSession;
-  if (embedding) mem.embedding = embedding;
-
-  return mem;
 }
 
 export { inferCategory };

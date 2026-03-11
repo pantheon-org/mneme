@@ -14,23 +14,10 @@ export const DEFAULT_WEIGHTS: ScoringWeights = {
   interference: 0.1,
 };
 
-function _cosine(a: number[], b: number[]): number {
-  let dot = 0,
-    normA = 0,
-    normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += (a[i] ?? 0) * (b[i] ?? 0);
-    normA += (a[i] ?? 0) ** 2;
-    normB += (b[i] ?? 0) ** 2;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
 export class Scorer {
   constructor(
     private readonly db: IndexDB,
-    private readonly embedder: Embedder,
+    _embedder: Embedder,
     private readonly weights: ScoringWeights = DEFAULT_WEIGHTS,
     private readonly threshold: number = 0.45,
   ) {}

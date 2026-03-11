@@ -7,26 +7,13 @@ import { Injector } from "../../retrieval/injector.js";
 import { HybridRetriever } from "../../retrieval/retriever.js";
 import type { Embedder } from "../../scoring/embedder.js";
 import { IndexDB } from "../../storage/index-db.js";
-import { VaultReader } from "../../storage/vault-reader.js";
 import { VaultWriter } from "../../storage/vault-writer.js";
 
-/**
- * Feature: Memory Retrieval Ranking
- *
- * As an AI coding agent
- * I want to retrieve contextually relevant memories ranked by importance
- * So that the most useful context is injected into my working window
- */
-
-function makeTmpDir(): string {
-  return mkdtempSync(join(tmpdir(), "vault-retrieval-test-"));
-}
-
 let seq = 0;
-function makeMemory(overrides: Partial<Memory> = {}): Memory {
+const makeMemory = (overrides: Partial<Memory> = {}): Memory => {
   seq++;
   return {
-    id: `mem_test${String(seq).padStart(3, "0")}`,
+    id: `mem_t09b${String(seq).padStart(3, "0")}`,
     tier: "episodic",
     scope: "user",
     category: "decision",
@@ -44,91 +31,20 @@ function makeMemory(overrides: Partial<Memory> = {}): Memory {
     filePath: "",
     ...overrides,
   };
-}
-
-function makeNullEmbedder(): Embedder {
-  return { embed: async (texts) => texts.map(() => []), dimensions: 768 };
-}
+};
+const makeNullEmbedder = (): Embedder => ({
+  embed: async (texts) => texts.map(() => []),
+  dimensions: 768,
+});
 
 describe("Feature: Memory Retrieval Ranking", () => {
-  const tmpDir = makeTmpDir();
+  const tmpDir = mkdtempSync(join(tmpdir(), "vault-retrieval-rank-test-"));
   const db = new IndexDB(join(tmpDir, "index.db"));
   const writer = new VaultWriter(tmpDir);
-  const reader = new VaultReader();
   const embedder = makeNullEmbedder();
 
   afterAll(() => {
     rmSync(tmpDir, { recursive: true, force: true });
-  });
-
-  describe("Scenario: Active memories are returned for a matching query", () => {
-    it("Given a memory stored in the vault, When retrieving with a matching query, Then the memory is returned", async () => {
-      const mem = makeMemory({
-        content: "Use bun:sqlite for database access",
-        summary: "SQLite choice",
-      });
-      mem.filePath = writer.resolveFilePath(mem);
-      writer.write(mem);
-      db.upsert(mem);
-
-      const retriever = new HybridRetriever(db, embedder);
-      const results = await retriever.retrieve({ text: "sqlite database" });
-      expect(results.some((r) => r.memory.id === mem.id)).toBe(true);
-    });
-  });
-
-  describe("Scenario: Superseded memories are excluded from results", () => {
-    it("Given a superseded memory, When retrieving, Then it is not included in results", async () => {
-      const mem = makeMemory({
-        status: "superseded",
-        content: "Old approach using better-sqlite3",
-        summary: "Outdated SQLite lib",
-      });
-      mem.filePath = writer.resolveFilePath(mem);
-      writer.write(mem);
-      db.upsert(mem);
-
-      const retriever = new HybridRetriever(db, embedder);
-      const results = await retriever.retrieve({ text: "sqlite" });
-      expect(results.every((r) => r.memory.id !== mem.id)).toBe(true);
-    });
-  });
-
-  describe("Scenario: Project-scoped memories are isolated by project", () => {
-    it("Given a project-scoped memory for project A, When retrieving with project B context, Then it is excluded", async () => {
-      const memA = makeMemory({
-        scope: "project",
-        projectId: "project-alpha",
-        content: "Alpha-specific migration strategy",
-        summary: "Alpha migration",
-      });
-      memA.filePath = writer.resolveFilePath(memA);
-      writer.write(memA);
-      db.upsert(memA);
-
-      const retriever = new HybridRetriever(db, embedder);
-      const results = await retriever.retrieve({
-        text: "migration strategy",
-        projectId: "project-beta",
-      });
-      expect(results.every((r) => r.memory.id !== memA.id)).toBe(true);
-    });
-
-    it("Given a project-scoped memory for project A, When retrieving with project A context, Then it is included", async () => {
-      const memA = makeMemory({
-        scope: "project",
-        projectId: "project-alpha",
-        content: "Alpha-specific deployment approach",
-        summary: "Alpha deployment",
-      });
-      memA.filePath = writer.resolveFilePath(memA);
-      writer.write(memA);
-      db.upsert(memA);
-
-      const retriever = new HybridRetriever(db, embedder);
-      const results = await retriever.retrieve({ text: "deployment", projectId: "project-alpha" });
-      expect(results.some((r) => r.memory.id === memA.id)).toBe(true);
-    });
   });
 
   describe("Scenario: Human-edited memories receive a ranking boost", () => {
@@ -152,14 +68,10 @@ describe("Feature: Memory Retrieval Ranking", () => {
       writer.write(normal);
       db.upsert(humanEdited);
       db.upsert(normal);
-
-      const retriever = new HybridRetriever(db, embedder);
-      const results = await retriever.retrieve({ text: query });
+      const results = await new HybridRetriever(db, embedder).retrieve({ text: query });
       const humanIdx = results.findIndex((r) => r.memory.id === humanEdited.id);
       const normalIdx = results.findIndex((r) => r.memory.id === normal.id);
-      if (humanIdx !== -1 && normalIdx !== -1) {
-        expect(humanIdx).toBeLessThan(normalIdx);
-      }
+      if (humanIdx !== -1 && normalIdx !== -1) expect(humanIdx).toBeLessThan(normalIdx);
     });
   });
 
@@ -175,9 +87,8 @@ describe("Feature: Memory Retrieval Ranking", () => {
         bm25Rank: 0.5,
         vectorRank: 0.5,
       }));
-      const budget = 200;
-      const result = injector.format(ranked, budget);
-      expect(result.tokenEstimate).toBeLessThanOrEqual(budget + 50);
+      const result = injector.format(ranked, 200);
+      expect(result.tokenEstimate).toBeLessThanOrEqual(250);
       expect(result.memoriesIncluded).toBeLessThan(50);
     });
 
@@ -192,8 +103,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
 
   describe("Scenario: topK limits returned results", () => {
     it("Given many memories in the database, When topK is 3, Then at most 3 results are returned", async () => {
-      const retriever = new HybridRetriever(db, embedder);
-      const results = await retriever.retrieve({ text: "memory", topK: 3 });
+      const results = await new HybridRetriever(db, embedder).retrieve({ text: "memory", topK: 3 });
       expect(results.length).toBeLessThanOrEqual(3);
     });
   });

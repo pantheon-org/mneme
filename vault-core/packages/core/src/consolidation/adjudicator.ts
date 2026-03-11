@@ -2,30 +2,9 @@ import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
-
-const VALID_CATEGORIES: MemoryCategory[] = [
-  "decision",
-  "constraint",
-  "pattern",
-  "bugfix",
-  "discovery",
-  "preference",
-];
-const VALID_SCOPES: MemoryScope[] = ["user", "project"];
-
-function validCategory(v: unknown): MemoryCategory {
-  if (typeof v === "string" && (VALID_CATEGORIES as string[]).includes(v))
-    return v as MemoryCategory;
-  return "discovery";
-}
-
-function validScope(v: unknown): MemoryScope {
-  if (typeof v === "string" && (VALID_SCOPES as string[]).includes(v)) return v as MemoryScope;
-  return "user";
-}
-
 import type { AuditLog } from "../storage/audit-log.js";
 import type { ConsolidationProposal } from "./proposer.js";
+import { validCategory, validScope } from "./validation-helpers.js";
 
 const execFileAsync = promisify(execFile);
 const INFERENCE_TIMEOUT_MS = 30_000;

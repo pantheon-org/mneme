@@ -74,23 +74,29 @@ Tests must:
 - Use `.js` extensions in all imports (even for `.ts` source files) — `NodeNext` module resolution
 - Use `import type` for type-only imports
 - No comments unless explicitly requested
+- **Arrow functions over named function declarations** — enforced by Biome `complexity/useArrowFunction`
+- **One exported function or class per module** — not automatically enforced; reviewers must flag violations
+- **Max 110 non-blank lines per file** — enforced by Biome `nursery/noExcessiveLinesPerFile`
+- **Test coverage >90%** — not automatically enforced; run `bun test --coverage` before merging
 
 ### File naming
 
 - Source files: `kebab-case.ts`
-- Test files: `T<nn>-description.test.ts`
+- Unit tests (colocated): `<source-file>.test.ts` or `<source-file>-<describe>.test.ts`
+- Integration tests: `T<nn>-description.test.ts`
 
 ### Bun-native APIs
 
-- Use `bun:sqlite` (not `better-sqlite3`)
-- Use `bun:test` (not Jest/Vitest)
+- Use `bun:sqlite` (not `better-sqlite3`) — enforced by Biome `noRestrictedImports`
+- Use `bun:test` (not Jest/Vitest) — enforced by Biome `noRestrictedImports`
 - Use `Bun.file()` for file reads where appropriate
 
 ## Adding a new CLI command
 
-1. Add the command to `packages/cli/src/index.ts` using Commander.js
-2. Wire dependencies in `packages/cli/src/core-loader.ts` if needed
-3. Update `docs/cli.md` with the new command, its options, and examples
+1. Create a new file `packages/cli/src/commands/<command-name>.ts` with a `register<Name>` function
+2. Register it in `packages/cli/src/index.ts`
+3. Wire dependencies in `packages/cli/src/core-loader.ts` if needed
+4. Update `docs/cli.md` with the new command, its options, and examples
 
 ## Adding a new configuration key
 
@@ -113,6 +119,11 @@ Tests must:
 - [ ] No comments added to code (unless explicitly requested)
 - [ ] No unused imports
 - [ ] `.js` extensions used in all imports
+- [ ] Arrow functions used over named function declarations
+- [ ] No file exceeds 110 non-blank lines
+- [ ] New source files export at most one primary function or class
+- [ ] Unit tests colocated with source files
+- [ ] `bun test --coverage` shows >90% line coverage
 
 ## Reporting issues
 

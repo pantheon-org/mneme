@@ -4,74 +4,9 @@ import type {
   MemoryCandidate,
   MemoryCategory,
 } from "@vault-core/types";
+import { KEYWORD_RULES, STRUCTURAL_RULES } from "./sweep-rules.js";
 
 const PRE_FILTER_THRESHOLD = 0.45;
-
-interface KeywordRule {
-  pattern: RegExp;
-  category: MemoryCategory;
-  label: string;
-  confidence: number;
-}
-
-const KEYWORD_RULES: KeywordRule[] = [
-  {
-    pattern: /\b(decided?|decision|chose|choosing|going with)\b/i,
-    category: "decision",
-    label: "decision-keyword",
-    confidence: 0.7,
-  },
-  {
-    pattern: /\b(must|required|constraint|cannot|never|always|forbidden)\b/i,
-    category: "constraint",
-    label: "constraint-keyword",
-    confidence: 0.7,
-  },
-  {
-    pattern: /\b(bug|fix(ed)?|regression|broken|workaround)\b/i,
-    category: "bugfix",
-    label: "bugfix-keyword",
-    confidence: 0.65,
-  },
-  {
-    pattern: /\b(pattern|convention|approach|architecture|structure)\b/i,
-    category: "pattern",
-    label: "pattern-keyword",
-    confidence: 0.6,
-  },
-  {
-    pattern: /\b(discovered?|found|realized|noticed|turns out)\b/i,
-    category: "discovery",
-    label: "discovery-keyword",
-    confidence: 0.6,
-  },
-  {
-    pattern: /\b(prefer(red|s)?|like|dislike|favor|avoid)\b/i,
-    category: "preference",
-    label: "preference-keyword",
-    confidence: 0.55,
-  },
-];
-
-interface StructuralRule {
-  pattern: RegExp;
-  label: string;
-  confidence: number;
-}
-
-const STRUCTURAL_RULES: StructuralRule[] = [
-  { pattern: /^(\s*[-*]\s.+\n){3,}/m, label: "enumeration", confidence: 0.5 },
-  {
-    pattern: /\b(actually|instead|rather than|not .{1,30} but)\b/i,
-    label: "correction",
-    confidence: 0.55,
-  },
-  {
-    pattern: /error|exception|failed|stack trace|ENOENT|EPERM/i,
-    label: "tool-error",
-    confidence: 0.65,
-  },
-];
 
 export class ContextSweep {
   scan(input: CaptureInput): MemoryCandidate[] {
@@ -110,7 +45,7 @@ export class ContextSweep {
   }
 }
 
-export function inferCategory(signals: DetectionSignal[]): MemoryCategory {
+export const inferCategory = (signals: DetectionSignal[]): MemoryCategory => {
   const keywordSignals = signals.filter((s) => s.type === "keyword");
   if (keywordSignals.length === 0) return "discovery";
 
@@ -123,4 +58,4 @@ export function inferCategory(signals: DetectionSignal[]): MemoryCategory {
   if (label.startsWith("pattern")) return "pattern";
   if (label.startsWith("preference")) return "preference";
   return "discovery";
-}
+};

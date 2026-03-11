@@ -2,9 +2,15 @@
 set -euo pipefail
 
 TILES_DIR=".tessl/tiles"
-OPENCODE_SKILLS_DIR=".opencode/skills"
+OPENCODE_SKILLS_DIR=".agents/skills"
 MCP_JSON=".mcp.json"
 OPENCODE_JSON="opencode.json"
+
+for arg in "$@"; do
+  case "$arg" in
+    --opencode-skills) OPENCODE_SKILLS_DIR=".opencode/skills" ;;
+  esac
+done
 
 mkdir -p "$OPENCODE_SKILLS_DIR"
 

@@ -47,20 +47,40 @@ export const VaultCorePlugin: Plugin = async ({ project }) => {
       }
     },
 
-    "experimental.chat.system.transform": async (_input, output) => {
-      try {
-        const results = await retriever.retrieve({
-          text: "recent context decisions constraints patterns",
-          topK: 7,
-          projectId,
-        });
-        const block = injector.format(results, 1500);
-        if (block.memoriesIncluded > 0) {
-          output.system.push(block.markdown);
-        }
-      } catch {
-        // never fail the harness
-      }
-    },
+    tools: [
+      {
+        name: "vault_recall",
+        description:
+          "Search persistent memory for relevant context: past decisions, constraints, patterns, and preferences. Call this at the start of any task to surface what you already know.",
+        parameters: {
+          type: "object" as const,
+          properties: {
+            query: {
+              type: "string",
+              description: "Natural language search query",
+            },
+            top_k: {
+              type: "number",
+              description: "Maximum number of memories to return (default 7)",
+            },
+          },
+          required: ["query"],
+        },
+        execute: async ({ query, top_k }: { query: string; top_k?: number }) => {
+          try {
+            const results = await retriever.retrieve({
+              text: query,
+              topK: top_k ?? 7,
+              projectId,
+            });
+            const block = injector.format(results, 1500);
+            if (block.memoriesIncluded === 0) return "No relevant memories found.";
+            return block.markdown;
+          } catch {
+            return "vault_recall unavailable.";
+          }
+        },
+      },
+    ],
   };
 };

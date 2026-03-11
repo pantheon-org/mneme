@@ -3,14 +3,15 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/plugin.ts",
   "scripts": {
-    "build": "tsc --build",
-    "typecheck": "tsc --noEmit",
-    "install-plugin": "bun run src/install.ts"
+    "build": "bunx tsc --build",
+    "dev": "bunx tsc --watch",
+    "typecheck": "bunx tsc --noEmit",
+    "install-plugin": "bun run scripts/install-plugin.ts"
   },
   "dependencies": {
+    "@opencode-ai/plugin": "*",
     "@vault-core/core": "workspace:*",
     "@vault-core/types": "workspace:*"
   }

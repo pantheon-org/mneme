@@ -3,11 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc --build",
-    "typecheck": "tsc --noEmit",
+    "build": "bunx tsc --build",
+    "dev": "bunx tsc --watch",
+    "typecheck": "bunx tsc --noEmit",
     "install-hooks": "bun run src/install.ts"
   },
   "dependencies": {

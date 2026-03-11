@@ -6,11 +6,11 @@ Harness-specific hooks that call directly into `@vault-core/core` — no subproc
 
 ## Gate
 
-- [ ] After `bun install:hooks`, Claude Code Stop hook writes session transcript to vault
-- [ ] After `bun install:hooks`, OpenCode per-message hook pushes captures to async queue
-- [ ] Hook execution never delays agent response by more than 5ms
-- [ ] If vault-core is unconfigured, hooks exit 0 and log error (no crash, no user-visible failure)
-- [ ] `bun install:hooks` is idempotent — safe to re-run
+- [x] After `bun install:hooks`, Claude Code Stop hook writes session transcript to vault
+- [x] After `bun install:hooks`, OpenCode per-message hook pushes captures to async queue
+- [x] Hook execution never delays agent response by more than 5ms
+- [x] If vault-core is unconfigured, hooks exit 0 and log error (no crash, no user-visible failure)
+- [x] `bun install:hooks` is idempotent — safe to re-run
 
 ## Dependencies
 

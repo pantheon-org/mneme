@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun {{HOOK_DIR}}/post-tool.js"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bun {{HOOK_DIR}}/session-stop.js"
+      }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "bun {{HOOK_DIR}}/session-start.js"
+      }
+    ]
+  }
+}

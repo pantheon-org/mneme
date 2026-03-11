@@ -21,5 +21,10 @@ pre-push:
       run: bunx markdownlint-cli2 "**/*.md" "#vault-core/node_modules" "#vault-core/dist" "#.tessl" "#.context"
 
     - name: typecheck
+      glob: "vault-core/**/*.ts"
       run: bun run typecheck
-      working_directory: vault-core
+
+    - name: test
+      glob:
+        - "vault-core/**/*.test.ts"
+      run: bun test

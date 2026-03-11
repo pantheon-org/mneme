@@ -57,7 +57,7 @@ Always run both before submitting a pull request.
 
 ### 4. Write integration tests
 
-Tests live in `packages/core/src/__tests__/integration/`. Each test file covers a specific scenario. Follow the `T<nn>-description.test.ts` naming convention.
+Tests live in `packages/core/src/__tests__/integration/`. Ten test files cover the full pipeline (T01–T09a). Follow the `T<nn>-description.test.ts` naming convention.
 
 Tests must:
 

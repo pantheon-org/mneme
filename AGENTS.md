@@ -93,14 +93,14 @@ Use `import type` for type-only imports.
 | `packages/core/src/consolidation/approval.ts` | Human approval via vault inbox |
 | `packages/cli/src/index.ts` | CLI entry point — registers commands from `commands/` |
 | `packages/cli/src/commands/` | One file per CLI command |
-| `packages/hook-claude-code/src/session-start.ts` | SessionStart hook entry point |
+| `packages/hook-claude-code/src/loader.ts` | Shared hook core initialisation |
 | `packages/hook-claude-code/src/post-tool.ts` | PostToolUse hook entry point |
 | `packages/hook-claude-code/src/session-stop.ts` | Stop hook entry point |
 | `packages/plugin-opencode/src/plugin.ts` | OpenCode plugin entry point |
 
 ## Testing
 
-Tests live in `packages/core/src/__tests__/integration/`. There are 7 integration test suites:
+Tests live in `packages/core/src/__tests__/integration/`. There are 10 integration test suites:
 
 | File | What it covers |
 |------|---------------|
@@ -111,6 +111,9 @@ Tests live in `packages/core/src/__tests__/integration/`. There are 7 integratio
 | `T05-consolidation-proposal.test.ts` | Episodic clustering and approval rendering |
 | `T06-queue-durability.test.ts` | `pending.jsonl` persistence across restart |
 | `T07-token-budget.test.ts` | Injector token budget enforcement |
+| `T08-signal-detection.test.ts` | Sweep signal detection rules |
+| `T09-retrieval-ranking.test.ts` | Hybrid search result ranking |
+| `T09a-retrieval-filtering.test.ts` | Retrieval scope and tier filtering |
 
 Tests use real filesystem (temp dirs) and real SQLite. No mocking except `MockAdjudicator` in T05.
 

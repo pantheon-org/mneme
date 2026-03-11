@@ -1,0 +1,7 @@
+{
+  "name": "tessl/npm-cucumber--gherkin",
+  "version": "33.1.0",
+  "docs": "docs/index.md",
+  "describes": "pkg:npm/@cucumber/gherkin@33.1.0",
+  "summary": "Gherkin parser and compiler for JavaScript/TypeScript environments that parses Cucumber feature files and converts them to AST and Cucumber Messages format."
+}

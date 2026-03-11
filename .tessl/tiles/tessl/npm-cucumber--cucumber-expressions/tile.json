@@ -1,0 +1,7 @@
+{
+  "name": "tessl/npm-cucumber--cucumber-expressions",
+  "version": "18.0.0",
+  "docs": "docs/index.md",
+  "describes": "pkg:npm/@cucumber/cucumber-expressions@18.0.1",
+  "summary": "Cucumber Expressions - a simpler alternative to Regular Expressions"
+}

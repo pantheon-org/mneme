@@ -50,6 +50,15 @@
     },
     "tessl/cli-setup": {
       "version": "0.70.1"
+    },
+    "tessl/npm-cucumber--gherkin": {
+      "version": "33.1.0"
+    },
+    "tessl/npm-cucumber--cucumber-expressions": {
+      "version": "18.0.0"
+    },
+    "tessl/npm-cucumber--cucumber": {
+      "version": "12.2.0"
     }
   }
 }

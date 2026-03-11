@@ -1,13 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Memory } from "@vault-core/types";
 import { parse, stringify } from "yaml";
 import type { AuditLog } from "../storage/audit-log.js";
 import type { IndexDB } from "../storage/index-db.js";
 import type { VaultWriter } from "../storage/vault-writer.js";
-import type { ConsolidationProposal } from "./proposer.js";
+import type { ConsolidationProposal } from "./consolidation-proposal.js";
 import { validCategory, validScope } from "./validation-helpers.js";
 
 const PROPOSALS_FILE = "00-inbox/consolidation-proposals.md";
@@ -35,7 +34,7 @@ export class ApprovalInterface {
       return `---\n${fm}\n---\n\n${p.proposedContent}\n`;
     });
     const filePath = join(this.vaultPath, PROPOSALS_FILE);
-    const tmp = join(tmpdir(), `vault-proposals-${Date.now()}.tmp`);
+    const tmp = `${filePath}.tmp`;
     writeFileSync(tmp, blocks.join("\n---separator---\n"), "utf-8");
     renameSync(tmp, filePath);
   }
@@ -43,22 +42,17 @@ export class ApprovalInterface {
   applyApproved(): { approved: number; rejected: number } {
     const filePath = join(this.vaultPath, PROPOSALS_FILE);
     if (!existsSync(filePath)) return { approved: 0, rejected: 0 };
-
-    const raw = readFileSync(filePath, "utf-8");
-    const blocks = raw.split("\n---separator---\n").filter(Boolean);
-
+    const blocks = readFileSync(filePath, "utf-8").split("\n---separator---\n").filter(Boolean);
     let approved = 0;
     let rejected = 0;
     const now = new Date().toISOString();
-
+    const pendingBlocks: string[] = [];
     for (const block of blocks) {
       const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(block.trim());
       if (!match) continue;
-
       const fm = parse(match[1] ?? "") as Record<string, unknown>;
       const content = (match[2] as string).trim();
       const status = fm.status as string;
-
       if (status === "approved") {
         this.writeSemanticNote(fm, content, now);
         const sourceIds = (fm.source_memory_ids as string[]) ?? [];
@@ -71,12 +65,13 @@ export class ApprovalInterface {
           detail: JSON.stringify({ decision: "rejected", proposalId: fm.proposal_id }),
         });
         rejected++;
+      } else {
+        pendingBlocks.push(block);
       }
     }
-
-    const clearTmp = join(tmpdir(), `vault-proposals-clear-${Date.now()}.tmp`);
-    writeFileSync(clearTmp, "", "utf-8");
-    renameSync(clearTmp, filePath);
+    const tmp = `${filePath}.tmp`;
+    writeFileSync(tmp, pendingBlocks.join("\n---separator---\n"), "utf-8");
+    renameSync(tmp, filePath);
     return { approved, rejected };
   }
 
@@ -107,6 +102,15 @@ export class ApprovalInterface {
 
   private markSuperseded(id: string, now: string): void {
     this.db.updateStatus(id, "superseded");
+    const memory = this.db.getById(id);
+    if (memory?.filePath) {
+      const raw = readFileSync(memory.filePath, "utf-8");
+      const patched = raw.replace(/^(status:\s*)active$/m, "$1superseded");
+      if (patched !== raw) {
+        writeFileSync(`${memory.filePath}.tmp`, patched, "utf-8");
+        renameSync(`${memory.filePath}.tmp`, memory.filePath);
+      }
+    }
     this.audit.append({ ts: now, op: "supersede", memoryId: id });
   }
 }

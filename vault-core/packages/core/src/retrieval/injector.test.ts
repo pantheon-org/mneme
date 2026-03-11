@@ -63,10 +63,10 @@ describe("Injector", () => {
       expect(result.markdown).not.toContain("x".repeat(501));
     });
 
-    it("always includes at least the first memory regardless of token budget", () => {
+    it("excludes first memory when its content exceeds the token budget", () => {
       const rm = makeRanked({ content: "a".repeat(100_000) });
       const result = injector.format([rm], 1);
-      expect(result.memoriesIncluded).toBe(1);
+      expect(result.memoriesIncluded).toBe(0);
     });
 
     it("stops adding memories when token budget is exceeded", () => {

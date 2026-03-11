@@ -21,18 +21,18 @@ describe("T07: token budget", () => {
     expect(block.tokenEstimate).toBeLessThanOrEqual(600);
   });
 
-  it("always includes the first memory even if it exceeds the token budget", () => {
+  it("respects token budget and excludes memories that exceed it", () => {
     const bigMemory = makeRankedMemory(
       makeMemory({
-        summary: "Very important decision that must always be included",
+        summary: "Very important decision",
         content: "B".repeat(2000),
       }),
       1.0,
     );
 
     const block = injector.format([bigMemory], 100);
-    expect(block.memoriesIncluded).toBe(1);
-    expect(block.markdown.length).toBeGreaterThan(0);
+    expect(block.memoriesIncluded).toBe(0);
+    expect(block.tokenEstimate).toBe(0);
   });
 
   it("returns empty block for empty input", () => {

@@ -75,6 +75,16 @@ export class IndexDB {
     return row ? rowToMemory(row) : null;
   }
 
+  getByIds(ids: string[]): Memory[] {
+    if (ids.length === 0) return [];
+    const placeholders = ids.map(() => "?").join(",");
+    return (
+      this.db
+        .prepare(`SELECT * FROM memories WHERE id IN (${placeholders})`)
+        .all(...(ids as [string, ...string[]])) as Record<string, unknown>[]
+    ).map(rowToMemory);
+  }
+
   getByTier(tier: MemoryTier, projectId?: string, activeOnly = false): Memory[] {
     let sql = "SELECT * FROM memories WHERE tier = ?";
     const params: (string | number | null)[] = [tier];

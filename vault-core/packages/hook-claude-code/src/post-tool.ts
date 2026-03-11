@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 import { loadHookCore } from "./loader.js";
 
-async function readStdin(): Promise<string> {
+const readStdin = async (): Promise<string> => {
   const chunks: Buffer[] = [];
   for await (const chunk of process.stdin) {
     chunks.push(chunk as Buffer);
   }
   return Buffer.concat(chunks).toString("utf-8");
-}
+};
 
-async function main(): Promise<void> {
+const main = async (): Promise<void> => {
   try {
     const raw = await readStdin();
     if (!raw.trim()) return;
@@ -31,6 +31,6 @@ async function main(): Promise<void> {
   } catch {
     process.exitCode = 0;
   }
-}
+};
 
 void main();

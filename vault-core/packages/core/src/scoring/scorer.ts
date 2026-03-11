@@ -58,7 +58,7 @@ export class Scorer {
 
     const interference = novelty < 0.3 ? 1.0 - novelty : 0;
 
-    const composite =
+    const rawComposite =
       this.weights.recency * recency +
       this.weights.frequency * frequency +
       this.weights.importance * importance +
@@ -66,6 +66,7 @@ export class Scorer {
       this.weights.novelty * novelty +
       this.weights.confidence * confidence -
       this.weights.interference * interference;
+    const composite = Math.max(0, Math.min(1, rawComposite));
 
     if (composite < this.threshold) return null;
 

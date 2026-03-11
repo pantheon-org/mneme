@@ -1,5 +1,4 @@
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { Plugin } from "@opencode-ai/plugin";
 import {
   AuditLog,
@@ -16,7 +15,7 @@ import {
 
 export const VaultCorePlugin: Plugin = async ({ project }) => {
   const config = loadConfig();
-  const auditPath = join(homedir(), ".vault-core", "audit.jsonl");
+  const auditPath = join(dirname(config.index_path), "audit.jsonl");
   const writer = new VaultWriter(config.vault_path);
   const db = new IndexDB(config.index_path);
   const audit = new AuditLog(auditPath);
@@ -33,11 +32,11 @@ export const VaultCorePlugin: Plugin = async ({ project }) => {
     db.close();
   };
   process.once("exit", cleanup);
-  process.once("SIGINT", cleanup);
   process.once("SIGTERM", cleanup);
 
   return {
     "tool.execute.after": async ({ sessionID, args, tool: toolName }) => {
+      if (toolName === "vault_recall") return;
       try {
         const content =
           typeof args === "object" && args !== null ? JSON.stringify(args) : String(args);

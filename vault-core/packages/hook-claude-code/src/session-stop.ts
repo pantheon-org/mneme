@@ -1,14 +1,19 @@
 #!/usr/bin/env bun
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { loadHookCore } from "./loader.js";
 
-async function main(): Promise<void> {
+const MAX_TRANSCRIPT_BYTES = 512 * 1024;
+
+const main = async (): Promise<void> => {
   try {
     const transcriptPath = process.env.CLAUDE_TRANSCRIPT_PATH;
     const sessionId = process.env.CLAUDE_SESSION_ID ?? "unknown";
     const projectId = process.env.VAULT_PROJECT_ID;
 
     if (transcriptPath && existsSync(transcriptPath)) {
+      const size = statSync(transcriptPath).size;
+      if (size > MAX_TRANSCRIPT_BYTES) return;
+
       const transcript = readFileSync(transcriptPath, "utf-8");
       const { queue } = loadHookCore();
 
@@ -27,6 +32,6 @@ async function main(): Promise<void> {
   } catch {
     process.exitCode = 0;
   }
-}
+};
 
 void main();

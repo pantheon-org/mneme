@@ -14,6 +14,7 @@ export interface CaptureInput {
   sourceHarness?: string;
   sourceSession?: string;
   projectId?: string;
+  enqueuedAt?: string;
 }
 
 export interface DetectionSignal {

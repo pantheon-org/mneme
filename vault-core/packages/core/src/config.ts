@@ -33,7 +33,7 @@ const DEFAULT_CONFIG: VaultCoreConfig = {
   },
 };
 
-export function loadConfig(): VaultCoreConfig {
+export const loadConfig = (): VaultCoreConfig => {
   if (!existsSync(CONFIG_DIR)) {
     mkdirSync(CONFIG_DIR, { recursive: true });
   }
@@ -62,4 +62,4 @@ export function loadConfig(): VaultCoreConfig {
       ...(parsed.vault_structure ?? {}),
     },
   };
-}
+};

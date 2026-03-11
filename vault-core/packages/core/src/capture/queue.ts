@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFile, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { CaptureInput } from "@vault-core/types";
@@ -9,7 +9,6 @@ import type { IndexDB } from "../storage/index-db.js";
 import type { VaultWriter } from "../storage/vault-writer.js";
 import { buildMemory } from "./build-memory.js";
 import type { ContextSweep } from "./sweep.js";
-import { inferCategory } from "./sweep.js";
 
 const PENDING_PATH = join(homedir(), ".vault-core", "pending.jsonl");
 const BATCH_SIZE = 10;
@@ -18,6 +17,7 @@ const BATCH_INTERVAL_MS = 500;
 export class CaptureQueue {
   private readonly queue: CaptureInput[] = [];
   private timer: ReturnType<typeof setInterval> | null = null;
+  private processing = false;
 
   constructor(
     private readonly sweep: ContextSweep,
@@ -35,67 +35,67 @@ export class CaptureQueue {
   }
 
   capture(input: CaptureInput): void {
-    this.queue.push(input);
-    appendFileSync(PENDING_PATH, `${JSON.stringify(input)}\n`, "utf-8");
+    const entry: CaptureInput = { ...input, enqueuedAt: new Date().toISOString() };
+    this.queue.push(entry);
+    void appendFile(PENDING_PATH, `${JSON.stringify(entry)}\n`, "utf-8", () => undefined);
   }
 
   private replayPending(): void {
     if (!existsSync(PENDING_PATH)) return;
     const raw = readFileSync(PENDING_PATH, "utf-8");
-    writeFileSync(PENDING_PATH, "", "utf-8");
     const lines = raw.split("\n").filter(Boolean);
+    writeFileSync(PENDING_PATH, "", "utf-8");
     for (const line of lines) {
       try {
         this.queue.push(JSON.parse(line) as CaptureInput);
-      } catch {
-        /* skip malformed */
-      }
+      } catch {}
     }
   }
 
   private async processBatch(): Promise<void> {
-    if (this.queue.length === 0) return;
-    const batch = this.queue.splice(0, BATCH_SIZE);
+    if (this.processing || this.queue.length === 0) return;
+    this.processing = true;
+    try {
+      const batch = this.queue.splice(0, BATCH_SIZE);
 
-    for (const input of batch) {
-      const candidates = this.sweep.scan(input);
-      if (candidates.length === 0) continue;
+      for (const input of batch) {
+        const candidates = this.sweep.scan(input);
+        if (candidates.length === 0) continue;
 
-      const candidate = candidates[0];
-      if (!candidate) continue;
+        const candidate = candidates[0];
+        if (!candidate) continue;
 
-      const texts = [candidate.content];
-      let embedding: number[] | undefined;
-      try {
-        const vecs = await this.embedder.embed(texts);
-        embedding = vecs[0];
-        if (embedding) candidate.embedding = embedding;
-      } catch {
-        // embedding failed — proceed without vector
+        let embedding: number[] | undefined;
+        try {
+          const vecs = await this.embedder.embed([candidate.content]);
+          embedding = vecs[0];
+          if (embedding) candidate.embedding = embedding;
+        } catch {}
+
+        const capturedAt = input.enqueuedAt ?? new Date().toISOString();
+        const scored = await this.scorer.score(candidate, capturedAt);
+        if (scored === null) continue;
+
+        const memory = buildMemory(candidate.input, scored.composite, embedding);
+        memory.filePath = this.writer.resolveFilePath(memory);
+        this.writer.write(memory);
+        this.db.upsert(memory);
+        if (embedding) this.db.upsertVector(memory.id, embedding);
+        const auditEntry: Parameters<AuditLog["append"]>[0] = {
+          ts: capturedAt,
+          op: "capture",
+          memoryId: memory.id,
+        };
+        if (input.sourceSession) auditEntry.sessionId = input.sourceSession;
+        if (input.sourceHarness) auditEntry.harness = input.sourceHarness;
+        this.audit.append(auditEntry);
       }
 
-      const now = new Date().toISOString();
-      const scored = await this.scorer.score(candidate, now);
-      if (scored === null) continue;
-
-      const memory = buildMemory(candidate.input, scored.composite, embedding);
-      const filePath = this.writer.resolveFilePath(memory);
-      memory.filePath = filePath;
-      this.writer.write(memory);
-      this.db.upsert(memory);
-      if (embedding) this.db.upsertVector(memory.id, embedding);
-      const auditEntry: Parameters<AuditLog["append"]>[0] = {
-        ts: now,
-        op: "capture",
-        memoryId: memory.id,
-      };
-      if (input.sourceSession) auditEntry.sessionId = input.sourceSession;
-      if (input.sourceHarness) auditEntry.harness = input.sourceHarness;
-      this.audit.append(auditEntry);
-    }
-
-    if (this.queue.length === 0) {
-      writeFileSync(PENDING_PATH, "", "utf-8");
+      if (this.queue.length === 0) {
+        writeFileSync(PENDING_PATH, "", "utf-8");
+      }
+    } finally {
+      this.processing = false;
     }
   }
 
@@ -109,5 +109,3 @@ export class CaptureQueue {
     if (this.timer !== null) clearInterval(this.timer);
   }
 }
-
-export { inferCategory };

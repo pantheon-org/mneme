@@ -3,13 +3,13 @@ import type { InjectionBlock, RankedMemory } from "@vault-core/types";
 const CHARS_PER_TOKEN = 4;
 const CONTENT_PREVIEW_CHARS = 500;
 
-function formatMemory(rm: RankedMemory): string {
+const formatMemory = (rm: RankedMemory): string => {
   const date = rm.memory.capturedAt.slice(0, 10);
   const header = `**[${rm.memory.category}]** ${rm.memory.summary} _(${date})_`;
   const meta = `scope: ${rm.memory.scope} | strength: ${rm.memory.strength.toFixed(2)}`;
   const body = rm.memory.content.slice(0, CONTENT_PREVIEW_CHARS);
   return `${header}\n${meta}\n\n${body}`;
-}
+};
 
 export class Injector {
   format(memories: RankedMemory[], maxTokens = 2000): InjectionBlock {
@@ -25,7 +25,7 @@ export class Injector {
       const section = formatMemory(rm);
       const sectionChars = section.length + 2; // +2 for "\n\n" separator
 
-      if (sections.length > 0 && charCount + sectionChars > maxChars) break;
+      if (charCount + sectionChars > maxChars) break;
 
       sections.push(section);
       charCount += sectionChars;

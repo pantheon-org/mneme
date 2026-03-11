@@ -1,6 +1,4 @@
 import { readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import type { Memory } from "@vault-core/types";
 import { parse } from "yaml";
 
@@ -52,10 +50,10 @@ export class VaultReader {
   }
 }
 
-function patchHumanEditedAt(filePath: string, raw: string, value: string): void {
+const patchHumanEditedAt = (filePath: string, raw: string, value: string): void => {
   const patched = raw.replace(/^(human_edited_at:\s*)null$/m, `$1${value}`);
   if (patched === raw) return;
-  const tmp = join(tmpdir(), `vault-patch-${Date.now()}.tmp`);
+  const tmp = `${filePath}.tmp`;
   writeFileSync(tmp, patched, "utf-8");
   renameSync(tmp, filePath);
-}
+};

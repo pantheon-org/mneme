@@ -7,12 +7,14 @@ const TIER_DIR: Record<string, string> = {
   episodic: "01-episodic",
   semantic: "02-semantic",
   procedural: "03-procedural",
+  archive: "04-archive",
 };
 
 export class VaultWriter {
   constructor(private readonly vaultPath: string) {}
 
   write(memory: Memory): void {
+    if (memory.humanEditedAt !== null && memory.humanEditedAt !== undefined) return;
     const filePath = this.resolveFilePath(memory);
     mkdirSync(dirname(filePath), { recursive: true });
     const content = renderMarkdown(memory);
@@ -28,7 +30,7 @@ export class VaultWriter {
   }
 }
 
-function renderMarkdown(memory: Memory): string {
+const renderMarkdown = (memory: Memory): string => {
   const frontmatter: Record<string, unknown> = {
     id: memory.id,
     tier: memory.tier,
@@ -49,4 +51,4 @@ function renderMarkdown(memory: Memory): string {
     human_edited_at: memory.humanEditedAt ?? null,
   };
   return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n${memory.content}\n`;
-}
+};

@@ -42,10 +42,14 @@ export class HybridRetriever {
       scores.set(id, entry);
     });
 
+    const allIds = [...scores.keys()];
+    const memories = this.db.getByIds(allIds);
+    const memoryMap = new Map(memories.map((m) => [m.id, m]));
+
     const ranked: RankedMemory[] = [];
 
     for (const [id, { bm25Rank, vecRank }] of scores) {
-      const memory = this.db.getById(id);
+      const memory = memoryMap.get(id);
       if (!memory) continue;
       if (memory.status !== "active") continue;
 
@@ -53,7 +57,7 @@ export class HybridRetriever {
         if (!query.projectId || memory.projectId !== query.projectId) continue;
       }
 
-      if (memory.tier === "episodic" && memory.strength < minStrength) continue;
+      if (memory.strength < minStrength) continue;
 
       let score = bm25Rank + vecRank;
       if (memory.humanEditedAt) score *= 1.5;

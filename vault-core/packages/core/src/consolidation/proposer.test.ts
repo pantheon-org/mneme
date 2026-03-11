@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type { Memory } from "@vault-core/types";
 import type { IndexDB } from "../storage/index-db.js";
 import type { Adjudicator } from "./adjudicator.js";
-import type { ConsolidationProposal } from "./proposer.js";
+import type { ConsolidationProposal } from "./consolidation-proposal.js";
 import { Proposer } from "./proposer.js";
 
 const BASE_EMBEDDING = [1, 0, 0, 0];

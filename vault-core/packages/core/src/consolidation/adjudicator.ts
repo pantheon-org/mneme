@@ -1,13 +1,21 @@
-import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { promisify } from "node:util";
 import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
 import type { AuditLog } from "../storage/audit-log.js";
-import type { ConsolidationProposal } from "./proposer.js";
+import type { ConsolidationProposal } from "./consolidation-proposal.js";
 import { validCategory, validScope } from "./validation-helpers.js";
 
-const execFileAsync = promisify(execFile);
 const INFERENCE_TIMEOUT_MS = 30_000;
+
+const parseCommand = (cmd: string): string[] => {
+  const result: string[] = [];
+  const re = /(?:"([^"]*)")|(?:'([^']*)')|(\S+)/g;
+  for (;;) {
+    const m = re.exec(cmd);
+    if (m === null) break;
+    result.push(m[1] ?? m[2] ?? m[3] ?? "");
+  }
+  return result;
+};
 
 export interface ConflictResolution {
   action: "keep_existing" | "keep_incoming" | "merge";
@@ -99,11 +107,16 @@ export class Adjudicator {
 
   private async callInference(payload: string): Promise<Record<string, unknown>> {
     try {
-      const parts = this.inferenceCommand.split(/\s+/);
-      const [cmd, ...args] = parts as [string, ...string[]];
-      const { stdout } = await execFileAsync(cmd, [...args, payload], {
-        timeout: INFERENCE_TIMEOUT_MS,
+      const [cmd, ...args] = parseCommand(this.inferenceCommand);
+      if (!cmd) return {};
+      const proc = Bun.spawn([cmd, ...args], {
+        stdin: Buffer.from(payload, "utf-8"),
+        stdout: "pipe",
+        stderr: "ignore",
       });
+      const stdout = await new Response(proc.stdout).text();
+      const exit = await proc.exited;
+      if (exit !== 0) return {};
       return JSON.parse(stdout.trim()) as Record<string, unknown>;
     } catch {
       return {};

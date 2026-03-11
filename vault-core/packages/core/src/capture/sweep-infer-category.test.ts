@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { inferCategory } from "./sweep.js";
+import { inferCategory } from "./infer-category.js";
 
 describe("inferCategory", () => {
   it("returns discovery when no keyword signals present", () => {

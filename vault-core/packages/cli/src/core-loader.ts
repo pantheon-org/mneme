@@ -1,5 +1,4 @@
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   Adjudicator,
   ApprovalInterface,
@@ -29,11 +28,12 @@ export interface VaultCore {
   approval: ApprovalInterface;
 }
 
-export function loadVaultCore(): VaultCore {
+export const loadVaultCore = (): VaultCore => {
   const config = loadConfig();
   const vaultPath = config.vault_path;
   const indexPath = config.index_path;
-  const auditPath = join(homedir(), ".vault-core", "audit.jsonl");
+  const auditPath = join(dirname(indexPath), "audit.jsonl");
+  const queuePath = join(dirname(indexPath), "consolidation-queue.jsonl");
 
   const writer = new VaultWriter(vaultPath);
   const reader = new VaultReader();
@@ -46,8 +46,8 @@ export function loadVaultCore(): VaultCore {
   const retriever = new HybridRetriever(db, embedder);
   const injector = new Injector();
   const adjudicator = new Adjudicator(config.inference_command, audit);
-  const proposer = new Proposer(db, adjudicator);
+  const proposer = new Proposer(db, adjudicator, queuePath);
   const approval = new ApprovalInterface(vaultPath, writer, db, audit);
 
   return { writer, reader, db, audit, queue, retriever, injector, proposer, approval };
-}
+};

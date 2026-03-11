@@ -1,81 +1,75 @@
-import { appendFileSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
-import { dirname, join } from "node:path";
-import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
+import { appendFile } from "node:fs";
+import type { Memory } from "@vault-core/types";
 import type { IndexDB } from "../storage/index-db.js";
 import type { Adjudicator } from "./adjudicator.js";
+import type { ConsolidationProposal } from "./consolidation-proposal.js";
 
-const QUEUE_PATH = join(homedir(), ".vault-core", "consolidation-queue.jsonl");
-const CLUSTER_THRESHOLD = 0.3;
+const COSINE_THRESHOLD = 0.85;
 const MIN_CLUSTER_SIZE = 3;
 
-export interface ConsolidationProposal {
-  id: string;
-  status: "pending" | "approved" | "rejected";
-  sourceMemoryIds: string[];
-  proposedContent: string;
-  proposedSummary: string;
-  proposedTags: string[];
-  proposedCategory: MemoryCategory;
-  proposedScope: MemoryScope;
-  createdAt: string;
-}
-
-function cosine(a: number[], b: number[]): number {
-  let dot = 0,
-    normA = 0,
-    normB = 0;
+const cosine = (a: number[], b: number[]): number => {
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
   for (let i = 0; i < a.length; i++) {
-    dot += (a[i] ?? 0) * (b[i] ?? 0);
-    normA += (a[i] ?? 0) ** 2;
-    normB += (b[i] ?? 0) ** 2;
+    dot += (a[i] as number) * (b[i] as number);
+    na += (a[i] as number) ** 2;
+    nb += (b[i] as number) ** 2;
   }
-  if (normA === 0 || normB === 0) return 0;
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
+  return na === 0 || nb === 0 ? 0 : dot / (Math.sqrt(na) * Math.sqrt(nb));
+};
 
-function clusterByEmbedding(memories: Memory[]): Memory[][] {
-  const assigned = new Set<string>();
+const centroid = (embeddings: number[][]): number[] => {
+  if (embeddings.length === 0) return [];
+  const dims = embeddings[0]?.length ?? 0;
+  const sum = new Array<number>(dims).fill(0);
+  for (const e of embeddings) {
+    for (let i = 0; i < dims; i++) sum[i] = (sum[i] ?? 0) + (e[i] ?? 0);
+  }
+  return sum.map((v) => v / embeddings.length);
+};
+
+const clusterByEmbedding = (memories: Memory[]): Memory[][] => {
+  const withEmbedding = memories.filter((m) => m.embedding && m.embedding.length > 0);
   const clusters: Memory[][] = [];
 
-  for (const mem of memories) {
-    if (assigned.has(mem.id) || !mem.embedding?.length) continue;
-    const cluster: Memory[] = [mem];
-    assigned.add(mem.id);
-
-    for (const other of memories) {
-      if (assigned.has(other.id) || !other.embedding?.length) continue;
-      const dist = 1 - cosine(mem.embedding, other.embedding);
-      if (dist < CLUSTER_THRESHOLD) {
-        cluster.push(other);
-        assigned.add(other.id);
+  for (const mem of withEmbedding) {
+    let placed = false;
+    for (const cluster of clusters) {
+      const clusterEmbeddings = cluster.map((m) => m.embedding as number[]);
+      const c = centroid(clusterEmbeddings);
+      if (cosine(mem.embedding as number[], c) >= COSINE_THRESHOLD) {
+        cluster.push(mem);
+        placed = true;
+        break;
       }
     }
-
-    if (cluster.length >= MIN_CLUSTER_SIZE) clusters.push(cluster);
+    if (!placed) clusters.push([mem]);
   }
 
-  return clusters;
-}
+  return clusters.filter((c) => c.length >= MIN_CLUSTER_SIZE);
+};
 
 export class Proposer {
   constructor(
     private readonly db: IndexDB,
     private readonly adjudicator: Adjudicator,
-  ) {
-    mkdirSync(dirname(QUEUE_PATH), { recursive: true });
-  }
+    private readonly queuePath = "",
+  ) {}
 
   async propose(projectId?: string): Promise<ConsolidationProposal[]> {
-    const episodics = this.db.getByTier("episodic", projectId, true);
-    const clusters = clusterByEmbedding(episodics);
+    const episodic = this.db.getByTier("episodic", projectId, true);
+    const clusters = clusterByEmbedding(episodic);
+
     const proposals: ConsolidationProposal[] = [];
 
     for (const cluster of clusters) {
       const proposal = await this.adjudicator.consolidate(cluster);
       if (!proposal) continue;
+      if (this.queuePath) {
+        void appendFile(this.queuePath, `${JSON.stringify(proposal)}\n`, "utf-8", () => undefined);
+      }
       proposals.push(proposal);
-      appendFileSync(QUEUE_PATH, `${JSON.stringify(proposal)}\n`, "utf-8");
     }
 
     return proposals;

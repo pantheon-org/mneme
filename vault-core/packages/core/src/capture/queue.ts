@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -40,15 +41,16 @@ export class CaptureQueue {
 
   private replayPending(): void {
     if (!existsSync(PENDING_PATH)) return;
-    const lines = readFileSync(PENDING_PATH, "utf-8").split("\n").filter(Boolean);
+    const raw = readFileSync(PENDING_PATH, "utf-8");
+    writeFileSync(PENDING_PATH, "", "utf-8");
+    const lines = raw.split("\n").filter(Boolean);
     for (const line of lines) {
       try {
         this.queue.push(JSON.parse(line) as CaptureInput);
       } catch {
-        // malformed line — skip
+        /* skip malformed */
       }
     }
-    writeFileSync(PENDING_PATH, "", "utf-8");
   }
 
   private async processBatch(): Promise<void> {
@@ -96,13 +98,19 @@ export class CaptureQueue {
     }
   }
 
+  async flush(): Promise<void> {
+    while (this.queue.length > 0) {
+      await this.processBatch();
+    }
+  }
+
   destroy(): void {
     if (this.timer !== null) clearInterval(this.timer);
   }
 }
 
 function buildMemory(input: CaptureInput, compositeScore: number, embedding?: number[]): Memory {
-  const id = `mem_${Date.now().toString(36)}`;
+  const id = `mem_${randomUUID()}`;
   const tier: MemoryTier = input.hints?.tier ?? "episodic";
   const scope: MemoryScope = input.projectId ? "project" : "user";
   const now = new Date().toISOString();

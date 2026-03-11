@@ -21,11 +21,11 @@ async function main(): Promise<void> {
         ...(projectId ? { projectId } : {}),
       });
 
-      await new Promise((r) => setTimeout(r, 2000));
+      await queue.flush();
       queue.destroy();
     }
   } catch {
-    // never fail the harness
+    process.exitCode = 0;
   }
 }
 

@@ -11,7 +11,7 @@ export const DEFAULT_WEIGHTS: ScoringWeights = {
   utility: 0.2,
   novelty: 0.1,
   confidence: 0.1,
-  interference: -0.1,
+  interference: 0.1,
 };
 
 function _cosine(a: number[], b: number[]): number {
@@ -30,7 +30,7 @@ function _cosine(a: number[], b: number[]): number {
 export class Scorer {
   constructor(
     private readonly db: IndexDB,
-    readonly _embedder: Embedder,
+    private readonly embedder: Embedder,
     private readonly weights: ScoringWeights = DEFAULT_WEIGHTS,
     private readonly threshold: number = 0.45,
   ) {}
@@ -63,7 +63,11 @@ export class Scorer {
       novelty = results.length === 0 ? 1.0 : Math.max(0, 1 - results.length / 10);
     }
 
-    const frequency = 0;
+    const existingResults = this.db.bm25Search(candidate.content.slice(0, 100), 1);
+    const existingId = existingResults[0]?.id;
+    const existingMemory = existingId ? this.db.getById(existingId) : null;
+    const rawFrequency = existingMemory ? existingMemory.frequencyCount : 0;
+    const frequency = Math.min(rawFrequency / 10, 1.0);
 
     const interference = novelty < 0.3 ? 1.0 - novelty : 0;
 
@@ -73,8 +77,8 @@ export class Scorer {
       this.weights.importance * importance +
       this.weights.utility * utility +
       this.weights.novelty * novelty +
-      this.weights.confidence * confidence +
-      Math.abs(this.weights.interference) * -interference;
+      this.weights.confidence * confidence -
+      this.weights.interference * interference;
 
     if (composite < this.threshold) return null;
 

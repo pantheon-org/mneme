@@ -29,7 +29,7 @@ async function main(): Promise<void> {
       ...(projectId ? { projectId } : {}),
     });
   } catch {
-    // never fail the harness
+    process.exitCode = 0;
   }
 }
 

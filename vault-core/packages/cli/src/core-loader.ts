@@ -43,7 +43,7 @@ export function loadVaultCore(): VaultCore {
   const embedder = new HarnessEmbedder(config.inference_command);
   const scorer = new Scorer(db, embedder, config.scoring_weights, config.capture_threshold);
   const queue = new CaptureQueue(sweep, embedder, scorer, writer, db, audit);
-  const retriever = new HybridRetriever(db, embedder, reader);
+  const retriever = new HybridRetriever(db, embedder);
   const injector = new Injector();
   const adjudicator = new Adjudicator(config.inference_command, audit);
   const proposer = new Proposer(db, adjudicator);

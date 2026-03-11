@@ -8,6 +8,7 @@ function makeStubDb(overrides: Partial<IndexDB> = {}): IndexDB {
   return {
     bm25Search: () => [],
     knnSearch: () => [],
+    getById: () => null,
     ...overrides,
   } as unknown as IndexDB;
 }
@@ -110,7 +111,7 @@ describe("Scorer", () => {
       }
     });
 
-    it("frequency is always 0", async () => {
+    it("frequency is 0 when no existing memory is found", async () => {
       const scorer = new Scorer(makeStubDb(), makeStubEmbedder());
       const result = await scorer.score(makeCandidate(), new Date().toISOString());
       expect(result?.frequency).toBe(0);

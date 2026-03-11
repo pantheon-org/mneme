@@ -1,6 +1,30 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Memory } from "@vault-core/types";
+import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
+
+const VALID_CATEGORIES: MemoryCategory[] = [
+  "decision",
+  "constraint",
+  "pattern",
+  "bugfix",
+  "discovery",
+  "preference",
+];
+const VALID_SCOPES: MemoryScope[] = ["user", "project"];
+
+function validCategory(v: unknown): MemoryCategory {
+  if (typeof v === "string" && (VALID_CATEGORIES as string[]).includes(v))
+    return v as MemoryCategory;
+  return "discovery";
+}
+
+function validScope(v: unknown): MemoryScope {
+  if (typeof v === "string" && (VALID_SCOPES as string[]).includes(v)) return v as MemoryScope;
+  return "user";
+}
+
 import { parse, stringify } from "yaml";
 import type { AuditLog } from "../storage/audit-log.js";
 import type { IndexDB } from "../storage/index-db.js";
@@ -32,7 +56,9 @@ export class ApprovalInterface {
       return `---\n${fm}\n---\n\n${p.proposedContent}\n`;
     });
     const filePath = join(this.vaultPath, PROPOSALS_FILE);
-    writeFileSync(filePath, blocks.join("\n---separator---\n"), "utf-8");
+    const tmp = join(tmpdir(), `vault-proposals-${Date.now()}.tmp`);
+    writeFileSync(tmp, blocks.join("\n---separator---\n"), "utf-8");
+    renameSync(tmp, filePath);
   }
 
   applyApproved(): { approved: number; rejected: number } {
@@ -69,16 +95,18 @@ export class ApprovalInterface {
       }
     }
 
-    writeFileSync(filePath, "", "utf-8");
+    const tmp = join(tmpdir(), `vault-proposals-clear-${Date.now()}.tmp`);
+    writeFileSync(tmp, "", "utf-8");
+    renameSync(tmp, filePath);
     return { approved, rejected };
   }
 
   private writeSemanticNote(fm: Record<string, unknown>, content: string, now: string): void {
     const memory: Memory = {
-      id: `mem_${Date.now().toString(36)}`,
+      id: `mem_${randomUUID()}`,
       tier: "semantic",
-      scope: (fm.proposed_scope as Memory["scope"]) ?? "user",
-      category: (fm.proposed_category as Memory["category"]) ?? "discovery",
+      scope: validScope(fm.proposed_scope),
+      category: validCategory(fm.proposed_category),
       status: "active",
       summary: content.slice(0, 120).replace(/\n/g, " "),
       content,

@@ -1,7 +1,6 @@
 import type { RankedMemory, RetrievalQuery } from "@vault-core/types";
 import type { Embedder } from "../scoring/embedder.js";
 import type { IndexDB } from "../storage/index-db.js";
-import type { VaultReader } from "../storage/vault-reader.js";
 
 const RRF_K = 60;
 
@@ -9,7 +8,6 @@ export class HybridRetriever {
   constructor(
     private readonly db: IndexDB,
     private readonly embedder: Embedder,
-    readonly _reader: VaultReader,
     private readonly defaultMinStrength: number = 0,
   ) {}
 
@@ -27,7 +25,7 @@ export class HybridRetriever {
         vecResults = this.db.knnSearch(embedding, fetchLimit);
       }
     } catch {
-      // embedding unavailable — BM25-only
+      vecResults = [];
     }
 
     const scores = new Map<string, { bm25Rank: number; vecRank: number }>();

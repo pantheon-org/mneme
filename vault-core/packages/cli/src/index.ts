@@ -25,11 +25,16 @@ program
       process.exit(1);
     }
     const { queue } = loadVaultCore();
+    const VALID_TIERS = ["episodic", "semantic", "procedural"] as const;
+    type ValidTier = (typeof VALID_TIERS)[number];
+    const tier: ValidTier = (VALID_TIERS as readonly string[]).includes(opts.tier)
+      ? (opts.tier as ValidTier)
+      : "episodic";
     queue.capture({
       content: text,
       sourceType: "cli",
       hints: {
-        tier: opts.tier as "episodic" | "semantic" | "procedural",
+        tier,
         tags: opts.tags
           ? opts.tags
               .split(",")
@@ -40,7 +45,7 @@ program
       ...(opts.project ? { projectId: opts.project } : {}),
     });
     console.log("Queued for capture.");
-    await new Promise((r) => setTimeout(r, 1500));
+    await queue.flush();
     queue.destroy();
   });
 
@@ -58,7 +63,7 @@ program
     });
     if (results.length === 0) {
       console.log("No results.");
-      process.exit(1);
+      return;
     }
     console.log(formatSearchResults(results));
   });
@@ -82,7 +87,7 @@ program
       ...(opts.project ? { projectId: opts.project } : {}),
     });
     console.log("Fetched and queued.");
-    await new Promise((r) => setTimeout(r, 1500));
+    await queue.flush();
     queue.destroy();
   });
 
@@ -142,9 +147,7 @@ program
         db.upsert(mem);
         seen.add(mem.id);
         count++;
-      } catch {
-        /* skip malformed */
-      }
+      } catch {}
     }
     const stale = db.allIds().filter((id) => !seen.has(id));
     for (const id of stale) db.delete(id);

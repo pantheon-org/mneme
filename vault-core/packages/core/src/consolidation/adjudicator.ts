@@ -1,6 +1,29 @@
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
+
+const VALID_CATEGORIES: MemoryCategory[] = [
+  "decision",
+  "constraint",
+  "pattern",
+  "bugfix",
+  "discovery",
+  "preference",
+];
+const VALID_SCOPES: MemoryScope[] = ["user", "project"];
+
+function validCategory(v: unknown): MemoryCategory {
+  if (typeof v === "string" && (VALID_CATEGORIES as string[]).includes(v))
+    return v as MemoryCategory;
+  return "discovery";
+}
+
+function validScope(v: unknown): MemoryScope {
+  if (typeof v === "string" && (VALID_SCOPES as string[]).includes(v)) return v as MemoryScope;
+  return "user";
+}
+
 import type { AuditLog } from "../storage/audit-log.js";
 import type { ConsolidationProposal } from "./proposer.js";
 
@@ -75,14 +98,14 @@ export class Adjudicator {
     if (!raw.proposedContent) return null;
 
     const proposal: ConsolidationProposal = {
-      id: `prop_${Date.now().toString(36)}`,
+      id: `prop_${randomUUID()}`,
       status: "pending",
       sourceMemoryIds: cluster.map((m) => m.id),
       proposedContent: raw.proposedContent,
       proposedSummary: raw.proposedSummary ?? raw.proposedContent.slice(0, 120).replace(/\n/g, " "),
       proposedTags: raw.proposedTags ?? [],
-      proposedCategory: raw.proposedCategory ?? "discovery",
-      proposedScope: raw.proposedScope ?? cluster[0]?.scope ?? "user",
+      proposedCategory: validCategory(raw.proposedCategory),
+      proposedScope: validScope(raw.proposedScope ?? cluster[0]?.scope),
       createdAt: new Date().toISOString(),
     };
 

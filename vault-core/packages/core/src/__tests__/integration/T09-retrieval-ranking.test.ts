@@ -71,7 +71,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
       writer.write(mem);
       db.upsert(mem);
 
-      const retriever = new HybridRetriever(db, embedder, reader);
+      const retriever = new HybridRetriever(db, embedder);
       const results = await retriever.retrieve({ text: "sqlite database" });
       expect(results.some((r) => r.memory.id === mem.id)).toBe(true);
     });
@@ -88,7 +88,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
       writer.write(mem);
       db.upsert(mem);
 
-      const retriever = new HybridRetriever(db, embedder, reader);
+      const retriever = new HybridRetriever(db, embedder);
       const results = await retriever.retrieve({ text: "sqlite" });
       expect(results.every((r) => r.memory.id !== mem.id)).toBe(true);
     });
@@ -106,7 +106,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
       writer.write(memA);
       db.upsert(memA);
 
-      const retriever = new HybridRetriever(db, embedder, reader);
+      const retriever = new HybridRetriever(db, embedder);
       const results = await retriever.retrieve({
         text: "migration strategy",
         projectId: "project-beta",
@@ -125,7 +125,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
       writer.write(memA);
       db.upsert(memA);
 
-      const retriever = new HybridRetriever(db, embedder, reader);
+      const retriever = new HybridRetriever(db, embedder);
       const results = await retriever.retrieve({ text: "deployment", projectId: "project-alpha" });
       expect(results.some((r) => r.memory.id === memA.id)).toBe(true);
     });
@@ -153,7 +153,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
       db.upsert(humanEdited);
       db.upsert(normal);
 
-      const retriever = new HybridRetriever(db, embedder, reader);
+      const retriever = new HybridRetriever(db, embedder);
       const results = await retriever.retrieve({ text: query });
       const humanIdx = results.findIndex((r) => r.memory.id === humanEdited.id);
       const normalIdx = results.findIndex((r) => r.memory.id === normal.id);
@@ -192,7 +192,7 @@ describe("Feature: Memory Retrieval Ranking", () => {
 
   describe("Scenario: topK limits returned results", () => {
     it("Given many memories in the database, When topK is 3, Then at most 3 results are returned", async () => {
-      const retriever = new HybridRetriever(db, embedder, reader);
+      const retriever = new HybridRetriever(db, embedder);
       const results = await retriever.retrieve({ text: "memory", topK: 3 });
       expect(results.length).toBeLessThanOrEqual(3);
     });

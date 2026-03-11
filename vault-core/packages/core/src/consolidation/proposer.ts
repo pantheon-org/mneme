@@ -67,7 +67,7 @@ export class Proposer {
   }
 
   async propose(projectId?: string): Promise<ConsolidationProposal[]> {
-    const episodics = this.db.getByTier("episodic", projectId);
+    const episodics = this.db.getByTier("episodic", projectId, true);
     const clusters = clusterByEmbedding(episodics);
     const proposals: ConsolidationProposal[] = [];
 

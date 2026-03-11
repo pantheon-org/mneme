@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const EMBED_TIMEOUT_MS = 30_000;
 
 export interface Embedder {
   embed(texts: string[]): Promise<number[][]>;
@@ -17,7 +18,9 @@ export class HarnessEmbedder implements Embedder {
     const parts = this.inferenceCommand.split(/\s+/);
     const [cmd, ...args] = parts as [string, ...string[]];
     const payload = JSON.stringify({ task: "embed", texts });
-    const { stdout } = await execFileAsync(cmd, [...args, payload]);
+    const { stdout } = await execFileAsync(cmd, [...args, payload], {
+      timeout: EMBED_TIMEOUT_MS,
+    });
     return JSON.parse(stdout.trim()) as number[][];
   }
 }
@@ -25,16 +28,34 @@ export class HarnessEmbedder implements Embedder {
 export class LocalEmbedder implements Embedder {
   readonly dimensions = 768;
   private pipelineFn:
-    | ((texts: string[], opts: Record<string, unknown>) => Promise<{ data: number[][] }>)
+    | ((
+        texts: string[],
+        opts: Record<string, unknown>,
+      ) => Promise<{ data: Float32Array; dims: number[] }>)
     | undefined;
 
   async embed(texts: string[]): Promise<number[][]> {
     if (!this.pipelineFn) {
       const { pipeline } = await import("@xenova/transformers");
-      this.pipelineFn = await pipeline("feature-extraction", "nomic-embed-text-v1");
+      this.pipelineFn = (await pipeline(
+        "feature-extraction",
+        "nomic-embed-text-v1",
+      )) as unknown as (
+        texts: string[],
+        opts: Record<string, unknown>,
+      ) => Promise<{ data: Float32Array; dims: number[] }>;
     }
-    const result = await this.pipelineFn(texts, { pooling: "mean", normalize: true });
-    return result.data;
+    const fn = this.pipelineFn;
+    const result = await fn(texts, {
+      pooling: "mean",
+      normalize: true,
+    });
+    const [batchSize, dim] = result.dims as [number, number];
+    const embeddings: number[][] = [];
+    for (let i = 0; i < batchSize; i++) {
+      embeddings.push(Array.from(result.data.slice(i * dim, (i + 1) * dim)));
+    }
+    return embeddings;
   }
 }
 

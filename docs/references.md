@@ -6,3 +6,4 @@
 - [Life OS in Markdown](https://joshowens.dev/life-os-markdown) — Markdown-first personal operating system patterns
 - [MCP Obsidian](https://mcp-obsidian.org/) — Model Context Protocol server for Obsidian vault integration
 - [PsychMem](https://github.com/muratg98/psychmem) — psychology-grounded memory system that directly inspired vault-core's three-tier model and scoring approach
+- [cornelius](https://github.com/Abilityai/cornelius/tree/main) - AI-powered second brain template for Claude Code + Obsidian

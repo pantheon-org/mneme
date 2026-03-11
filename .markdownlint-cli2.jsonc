@@ -1,25 +1,26 @@
 {
   "config": {
     "default": true,
-    "MD013": {
-      "line_length": 120,
-      "code_blocks": false,
-      "tables": false
-    },
+    "MD013": false,
     "MD024": {
       "siblings_only": true
     },
     "MD033": {
       "allowed_elements": ["br", "details", "summary", "img"]
     },
-    "MD041": true
+    "MD041": true,
+    "MD060": false,
+    "MD040": false,
+    "MD036": false
   },
   "ignores": [
-    "vault-core/node_modules/**",
+    "**/node_modules/**",
     "vault-core/dist/**",
     "vault-core/packages/*/dist/**",
     ".tessl/**",
     ".context/**",
+    ".claude/**",
+    ".opencode/**",
     "vault-core/skills/**"
   ]
 }

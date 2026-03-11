@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 
 const HOOK_DIR = join(homedir(), ".vault-core", "hooks", "claude-code");
 const CLAUDE_SETTINGS = join(homedir(), ".claude", "settings.json");
-const OPENCODE_CONFIG = join(homedir(), ".config", "opencode", "opencode.json");
+const _OPENCODE_CONFIG = join(homedir(), ".config", "opencode", "opencode.json");
 const OPENCODE_PLUGIN_DIR = join(homedir(), ".config", "opencode", "plugins", "vault-core");
 
 const DIST_DIR = resolve(import.meta.dir, "..", "packages", "hook-claude-code", "dist");
@@ -20,7 +20,7 @@ function readJson<T>(path: string, fallback: T): T {
 
 function writeJson(path: string, data: unknown): void {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
 }
 
 // ── 1. Copy compiled hooks ──────────────────────────────────────────────────

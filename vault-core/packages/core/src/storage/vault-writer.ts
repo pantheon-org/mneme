@@ -1,30 +1,30 @@
-import { mkdirSync, renameSync, writeFileSync } from "node:fs"
-import { dirname, join } from "node:path"
-import { stringify } from "yaml"
-import type { Memory } from "@vault-core/types"
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import type { Memory } from "@vault-core/types";
+import { stringify } from "yaml";
 
 const TIER_DIR: Record<string, string> = {
   episodic: "01-episodic",
   semantic: "02-semantic",
   procedural: "03-procedural",
-}
+};
 
 export class VaultWriter {
   constructor(private readonly vaultPath: string) {}
 
   write(memory: Memory): void {
-    const filePath = this.resolveFilePath(memory)
-    mkdirSync(dirname(filePath), { recursive: true })
-    const content = renderMarkdown(memory)
-    const tmp = filePath + ".tmp"
-    writeFileSync(tmp, content, "utf-8")
-    renameSync(tmp, filePath)
+    const filePath = this.resolveFilePath(memory);
+    mkdirSync(dirname(filePath), { recursive: true });
+    const content = renderMarkdown(memory);
+    const tmp = `${filePath}.tmp`;
+    writeFileSync(tmp, content, "utf-8");
+    renameSync(tmp, filePath);
   }
 
   resolveFilePath(memory: Memory): string {
-    const dir = TIER_DIR[memory.tier] ?? "00-inbox"
-    const slug = memory.id.replace("mem_", "")
-    return join(this.vaultPath, dir, `${slug}.md`)
+    const dir = TIER_DIR[memory.tier] ?? "00-inbox";
+    const slug = memory.id.replace("mem_", "");
+    return join(this.vaultPath, dir, `${slug}.md`);
   }
 }
 
@@ -47,6 +47,6 @@ function renderMarkdown(memory: Memory): string {
     captured_at: memory.capturedAt,
     updated_at: memory.updatedAt,
     human_edited_at: memory.humanEditedAt ?? null,
-  }
-  return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n${memory.content}\n`
+  };
+  return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n${memory.content}\n`;
 }

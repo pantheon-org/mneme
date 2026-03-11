@@ -5,11 +5,13 @@ pre-commit:
       glob: "vault-core/**/*.{js,ts,tsx,json,jsonc}"
       run: bunx --bun biome check --write {staged_files}
       stage_fixed: true
+      fail_text: "biome found issues that could not be auto-fixed"
 
     - name: markdownlint
       glob: "**/*.md"
       run: bunx markdownlint-cli2 --fix {staged_files}
       stage_fixed: true
+      fail_text: "markdownlint found issues that could not be auto-fixed"
 
 pre-push:
   parallel: true
@@ -18,13 +20,15 @@ pre-push:
       run: bunx --bun biome check vault-core/
 
     - name: markdownlint-check
-      run: bunx markdownlint-cli2 "**/*.md" "#vault-core/node_modules" "#vault-core/dist" "#.tessl" "#.context"
+      run: bunx markdownlint-cli2 "**/*.md" "#**/node_modules/**" "#vault-core/dist" "#.tessl" "#.context" "#.*/**"
 
     - name: typecheck
       glob: "vault-core/**/*.ts"
+      root: vault-core
       run: bun run typecheck
 
     - name: test
       glob:
         - "vault-core/**/*.test.ts"
+      root: vault-core
       run: bun test

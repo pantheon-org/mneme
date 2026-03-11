@@ -27,13 +27,13 @@ describe("Feature: Capture Signal Detection", () => {
       const content = "We decided to use PostgreSQL as the primary database";
       const candidates = sweep.scan(input(content));
       expect(candidates).toHaveLength(1);
-      expect(candidates[0]!.signals.some((s) => s.label === "decision-keyword")).toBe(true);
+      expect(candidates[0]?.signals.some((s) => s.label === "decision-keyword")).toBe(true);
     });
 
     it("Given content containing a decision keyword, When scanned, Then candidate content matches input", () => {
       const content = "We decided to use PostgreSQL as the primary database";
       const candidates = sweep.scan(input(content));
-      expect(candidates[0]!.content).toBe(content);
+      expect(candidates[0]?.content).toBe(content);
     });
   });
 
@@ -47,7 +47,7 @@ describe("Feature: Capture Signal Detection", () => {
     it("Given content expressing a hard constraint, When scanned, Then constraint signal is present", () => {
       const content = "You must never call this function from the main thread";
       const candidates = sweep.scan(input(content));
-      expect(candidates[0]!.signals.some((s) => s.label === "constraint-keyword")).toBe(true);
+      expect(candidates[0]?.signals.some((s) => s.label === "constraint-keyword")).toBe(true);
     });
   });
 
@@ -55,7 +55,7 @@ describe("Feature: Capture Signal Detection", () => {
     it("Given content describing a fix, When scanned, Then bugfix signal is detected", () => {
       const content = "Fixed the off-by-one error in the pagination cursor";
       const candidates = sweep.scan(input(content));
-      expect(candidates[0]!.signals.some((s) => s.label === "bugfix-keyword")).toBe(true);
+      expect(candidates[0]?.signals.some((s) => s.label === "bugfix-keyword")).toBe(true);
     });
   });
 
@@ -80,8 +80,8 @@ describe("Feature: Capture Signal Detection", () => {
 
     it("Given forceCapture hint, When scanned, Then signal confidence is 1.0", () => {
       const candidates = sweep.scan(input("okay", { forceCapture: true }));
-      const forceSignal = candidates[0]!.signals.find((s) => s.label === "force-capture");
-      expect(forceSignal!.confidence).toBe(1.0);
+      const forceSignal = candidates[0]?.signals.find((s) => s.label === "force-capture");
+      expect(forceSignal?.confidence).toBe(1.0);
     });
   });
 
@@ -91,7 +91,7 @@ describe("Feature: Capture Signal Detection", () => {
         "Key design choices:\n- Use Bun for speed\n- Use SQLite for storage\n- Use TypeScript strict mode\n";
       const candidates = sweep.scan(input(content));
       expect(candidates.length).toBeGreaterThan(0);
-      expect(candidates[0]!.signals.some((s) => s.label === "enumeration")).toBe(true);
+      expect(candidates[0]?.signals.some((s) => s.label === "enumeration")).toBe(true);
     });
 
     it("Given content with only 2 bullet points, When scanned, Then enumeration signal is absent", () => {
@@ -106,7 +106,7 @@ describe("Feature: Capture Signal Detection", () => {
     it("Given content containing an error message, When scanned, Then tool-error signal is detected", () => {
       const content = "Error: ENOENT: no such file or directory, open '/tmp/vault'";
       const candidates = sweep.scan(input(content));
-      expect(candidates[0]!.signals.some((s) => s.label === "tool-error")).toBe(true);
+      expect(candidates[0]?.signals.some((s) => s.label === "tool-error")).toBe(true);
     });
   });
 
@@ -114,7 +114,7 @@ describe("Feature: Capture Signal Detection", () => {
     it("Given content expressing a correction, When scanned, Then correction signal is detected", () => {
       const content = "Actually we should be using GET not POST for this endpoint";
       const candidates = sweep.scan(input(content));
-      expect(candidates[0]!.signals.some((s) => s.label === "correction")).toBe(true);
+      expect(candidates[0]?.signals.some((s) => s.label === "correction")).toBe(true);
     });
   });
 });

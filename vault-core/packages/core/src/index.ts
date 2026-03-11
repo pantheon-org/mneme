@@ -1,18 +1,18 @@
-export { loadConfig } from "./config.js"
-export { VaultWriter } from "./storage/vault-writer.js"
-export { VaultReader } from "./storage/vault-reader.js"
-export { IndexDB } from "./storage/index-db.js"
-export type { BM25Result, VecResult } from "./storage/index-db.js"
-export { AuditLog } from "./storage/audit-log.js"
-export { Adjudicator } from "./consolidation/adjudicator.js"
-export type { ConflictResolution } from "./consolidation/adjudicator.js"
-export { Proposer } from "./consolidation/proposer.js"
-export type { ConsolidationProposal } from "./consolidation/proposer.js"
-export { ApprovalInterface } from "./consolidation/approval.js"
-export { HybridRetriever } from "./retrieval/retriever.js"
-export { Injector } from "./retrieval/injector.js"
-export { ContextSweep, inferCategory } from "./capture/sweep.js"
-export { CaptureQueue } from "./capture/queue.js"
-export type { Embedder, EmbedderConfig } from "./scoring/embedder.js"
-export { HarnessEmbedder, LocalEmbedder, createEmbedder } from "./scoring/embedder.js"
-export { Scorer, DEFAULT_WEIGHTS } from "./scoring/scorer.js"
+export { CaptureQueue } from "./capture/queue.js";
+export { ContextSweep, inferCategory } from "./capture/sweep.js";
+export { loadConfig } from "./config.js";
+export type { ConflictResolution } from "./consolidation/adjudicator.js";
+export { Adjudicator } from "./consolidation/adjudicator.js";
+export { ApprovalInterface } from "./consolidation/approval.js";
+export type { ConsolidationProposal } from "./consolidation/proposer.js";
+export { Proposer } from "./consolidation/proposer.js";
+export { Injector } from "./retrieval/injector.js";
+export { HybridRetriever } from "./retrieval/retriever.js";
+export type { Embedder, EmbedderConfig } from "./scoring/embedder.js";
+export { createEmbedder, HarnessEmbedder, LocalEmbedder } from "./scoring/embedder.js";
+export { DEFAULT_WEIGHTS, Scorer } from "./scoring/scorer.js";
+export { AuditLog } from "./storage/audit-log.js";
+export type { BM25Result, VecResult } from "./storage/index-db.js";
+export { IndexDB } from "./storage/index-db.js";
+export { VaultReader } from "./storage/vault-reader.js";
+export { VaultWriter } from "./storage/vault-writer.js";

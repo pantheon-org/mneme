@@ -1,76 +1,71 @@
-import type { ImportanceScore, ScoringWeights, MemoryCandidate } from "@vault-core/types"
-import type { IndexDB } from "../storage/index-db.js"
-import type { Embedder } from "./embedder.js"
+import type { ImportanceScore, MemoryCandidate, ScoringWeights } from "@vault-core/types";
+import type { IndexDB } from "../storage/index-db.js";
+import type { Embedder } from "./embedder.js";
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const DEFAULT_WEIGHTS: ScoringWeights = {
-  recency: 0.20,
+  recency: 0.2,
   frequency: 0.15,
   importance: 0.25,
-  utility: 0.20,
-  novelty: 0.10,
-  confidence: 0.10,
-  interference: -0.10,
-}
+  utility: 0.2,
+  novelty: 0.1,
+  confidence: 0.1,
+  interference: -0.1,
+};
 
-function cosine(a: number[], b: number[]): number {
-  let dot = 0, normA = 0, normB = 0
+function _cosine(a: number[], b: number[]): number {
+  let dot = 0,
+    normA = 0,
+    normB = 0;
   for (let i = 0; i < a.length; i++) {
-    dot += (a[i] ?? 0) * (b[i] ?? 0)
-    normA += (a[i] ?? 0) ** 2
-    normB += (b[i] ?? 0) ** 2
+    dot += (a[i] ?? 0) * (b[i] ?? 0);
+    normA += (a[i] ?? 0) ** 2;
+    normB += (b[i] ?? 0) ** 2;
   }
-  if (normA === 0 || normB === 0) return 0
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB))
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 export class Scorer {
   constructor(
     private readonly db: IndexDB,
-    private readonly embedder: Embedder,
+    readonly _embedder: Embedder,
     private readonly weights: ScoringWeights = DEFAULT_WEIGHTS,
     private readonly threshold: number = 0.45,
   ) {}
 
-  async score(
-    candidate: MemoryCandidate,
-    capturedAt: string,
-  ): Promise<ImportanceScore | null> {
-    const elapsed = Date.now() - Date.parse(capturedAt)
-    const recency = Math.exp(-elapsed / SEVEN_DAYS_MS)
+  async score(candidate: MemoryCandidate, capturedAt: string): Promise<ImportanceScore | null> {
+    const elapsed = Date.now() - Date.parse(capturedAt);
+    const recency = Math.exp(-elapsed / SEVEN_DAYS_MS);
 
     const importanceRaw = candidate.signals.reduce((acc, s, i) => {
-      return acc + s.confidence * Math.pow(0.8, i)
-    }, 0)
-    const importance = Math.min(importanceRaw, 1.0)
+      return acc + s.confidence * 0.8 ** i;
+    }, 0);
+    const importance = Math.min(importanceRaw, 1.0);
 
     const confidence =
       candidate.signals.length > 0
-        ? candidate.signals.reduce((s, sig) => s + sig.confidence, 0) /
-          candidate.signals.length
-        : 0
+        ? candidate.signals.reduce((s, sig) => s + sig.confidence, 0) / candidate.signals.length
+        : 0;
 
-    const utility = importance * confidence
+    const utility = importance * confidence;
 
-    let novelty = 1.0
+    let novelty = 1.0;
     if (candidate.embedding && candidate.embedding.length > 0) {
-      const neighbours = this.db.knnSearch(candidate.embedding, 50)
+      const neighbours = this.db.knnSearch(candidate.embedding, 50);
       if (neighbours.length > 0) {
-        const maxSim = Math.max(
-          ...neighbours.map((n) => 1 - (n.distance ?? 0)),
-        )
-        novelty = 1 - maxSim
+        const maxSim = Math.max(...neighbours.map((n) => 1 - (n.distance ?? 0)));
+        novelty = 1 - maxSim;
       }
     } else {
-      const results = this.db.bm25Search(candidate.content.slice(0, 100), 10)
-      novelty = results.length === 0 ? 1.0 : Math.max(0, 1 - results.length / 10)
+      const results = this.db.bm25Search(candidate.content.slice(0, 100), 10);
+      novelty = results.length === 0 ? 1.0 : Math.max(0, 1 - results.length / 10);
     }
 
-    const frequency = 0
+    const frequency = 0;
 
-    const interference =
-      novelty < 0.3 ? 1.0 - novelty : 0
+    const interference = novelty < 0.3 ? 1.0 - novelty : 0;
 
     const composite =
       this.weights.recency * recency +
@@ -79,9 +74,9 @@ export class Scorer {
       this.weights.utility * utility +
       this.weights.novelty * novelty +
       this.weights.confidence * confidence +
-      Math.abs(this.weights.interference) * -interference
+      Math.abs(this.weights.interference) * -interference;
 
-    if (composite < this.threshold) return null
+    if (composite < this.threshold) return null;
 
     return {
       recency,
@@ -92,6 +87,6 @@ export class Scorer {
       confidence,
       interference,
       composite,
-    }
+    };
   }
 }

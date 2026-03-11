@@ -96,7 +96,7 @@ describe("Proposer", () => {
       );
       const proposer = new Proposer(makeDb(memories), makeMockAdjudicator());
       const [proposal] = await proposer.propose();
-      expect(proposal!.sourceMemoryIds).toHaveLength(3);
+      expect(proposal?.sourceMemoryIds).toHaveLength(3);
     });
 
     it("does not propose memories from different embedding clusters", async () => {

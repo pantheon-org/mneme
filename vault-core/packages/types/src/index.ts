@@ -1,30 +1,27 @@
 export type {
-  Memory,
-  MemoryTier,
-  MemoryScope,
-  MemoryStatus,
-  MemoryCategory,
-} from "./memory.js"
-
-export type {
-  CaptureInput,
   CaptureHints,
+  CaptureInput,
   DetectionSignal,
   MemoryCandidate,
-} from "./capture.js"
-
-export type { ScoringWeights, ImportanceScore } from "./scoring.js"
-
+} from "./capture.js";
 export type {
-  RetrievalQuery,
-  RankedMemory,
+  Memory,
+  MemoryCategory,
+  MemoryScope,
+  MemoryStatus,
+  MemoryTier,
+} from "./memory.js";
+export type {
   InjectionBlock,
-} from "./retrieval.js"
+  RankedMemory,
+  RetrievalQuery,
+} from "./retrieval.js";
+export type { ImportanceScore, ScoringWeights } from "./scoring.js";
 
 export type {
-  VaultCoreConfig,
-  VaultStructure,
-  VaultDestination,
   AuditEntry,
   AuditOp,
-} from "./vault.js"
+  VaultCoreConfig,
+  VaultDestination,
+  VaultStructure,
+} from "./vault.js";

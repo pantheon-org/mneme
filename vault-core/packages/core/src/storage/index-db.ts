@@ -1,7 +1,7 @@
-import { Database } from "bun:sqlite"
-import { mkdirSync } from "node:fs"
-import { dirname } from "node:path"
-import type { Memory, MemoryTier, MemoryStatus } from "@vault-core/types"
+import { Database } from "bun:sqlite";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+import type { Memory, MemoryStatus, MemoryTier } from "@vault-core/types";
 
 const STATEMENTS = [
   /* sql */ `CREATE TABLE IF NOT EXISTS memories (
@@ -26,30 +26,30 @@ const STATEMENTS = [
     content,
     tags
   )`,
-]
+];
 
 export interface BM25Result {
-  id: string
-  summary: string
-  rank: number
+  id: string;
+  summary: string;
+  rank: number;
 }
 
 export interface VecResult {
-  id: string
-  distance: number
+  id: string;
+  distance: number;
 }
 
 export class IndexDB {
-  private readonly db: Database
+  private readonly db: Database;
 
   constructor(indexPath: string) {
-    mkdirSync(dirname(indexPath), { recursive: true })
-    this.db = new Database(indexPath)
-    this.db.run("PRAGMA journal_mode=WAL")
+    mkdirSync(dirname(indexPath), { recursive: true });
+    this.db = new Database(indexPath);
+    this.db.run("PRAGMA journal_mode=WAL");
     for (const stmt of STATEMENTS) {
-      this.db.run(stmt)
+      this.db.run(stmt);
     }
-    this.initVec()
+    this.initVec();
   }
 
   private initVec(): void {
@@ -60,7 +60,7 @@ export class IndexDB {
           id        TEXT PRIMARY KEY,
           embedding TEXT NOT NULL DEFAULT '[]'
         )
-      `)
+      `);
     } catch {
       // vec table creation failed; vector search unavailable
     }
@@ -105,14 +105,12 @@ export class IndexDB {
         $captured_at: memory.capturedAt,
         $updated_at: memory.updatedAt,
         $mtime_ns: 0,
-      })
+      });
 
-    this.db
-      .prepare(`DELETE FROM memories_fts WHERE id = ?`)
-      .run(memory.id)
+    this.db.prepare(`DELETE FROM memories_fts WHERE id = ?`).run(memory.id);
     this.db
       .prepare(`INSERT INTO memories_fts(id, summary, content, tags) VALUES (?, ?, ?, ?)`)
-      .run(memory.id, memory.summary, memory.content, JSON.stringify(memory.tags))
+      .run(memory.id, memory.summary, memory.content, JSON.stringify(memory.tags));
   }
 
   upsertVector(id: string, embedding: number[]): void {
@@ -123,7 +121,7 @@ export class IndexDB {
           VALUES ($id, $embedding)
           ON CONFLICT(id) DO UPDATE SET embedding = excluded.embedding
         `)
-        .run({ $id: id, $embedding: JSON.stringify(embedding) })
+        .run({ $id: id, $embedding: JSON.stringify(embedding) });
     } catch {
       // vec extension unavailable
     }
@@ -136,8 +134,8 @@ export class IndexDB {
       .filter(Boolean)
       .map((w) => w.replace(/['"*^(){}[\]:]/g, ""))
       .filter(Boolean)
-      .join(" OR ")
-    if (!ftsQuery) return []
+      .join(" OR ");
+    if (!ftsQuery) return [];
     try {
       return this.db
         .prepare(/* sql */ `
@@ -147,9 +145,9 @@ export class IndexDB {
           ORDER BY fts.rank
           LIMIT ?
         `)
-        .all(ftsQuery, limit) as BM25Result[]
+        .all(ftsQuery, limit) as BM25Result[];
     } catch {
-      return []
+      return [];
     }
   }
 
@@ -163,17 +161,18 @@ export class IndexDB {
           ORDER BY distance
           LIMIT ?
         `)
-        .all(JSON.stringify(embedding), limit) as VecResult[]
+        .all(JSON.stringify(embedding), limit) as VecResult[];
     } catch {
-      return []
+      return [];
     }
   }
 
   getById(id: string): Memory | null {
-    const row = this.db
-      .prepare("SELECT * FROM memories WHERE id = ?")
-      .get(id) as Record<string, unknown> | null
-    return row ? rowToMemory(row) : null
+    const row = this.db.prepare("SELECT * FROM memories WHERE id = ?").get(id) as Record<
+      string,
+      unknown
+    > | null;
+    return row ? rowToMemory(row) : null;
   }
 
   getByTier(tier: MemoryTier, projectId?: string): Memory[] {
@@ -181,39 +180,38 @@ export class IndexDB {
       ? (this.db
           .prepare("SELECT * FROM memories WHERE tier = ? AND project_id = ?")
           .all(tier, projectId) as Record<string, unknown>[])
-      : (this.db
-          .prepare("SELECT * FROM memories WHERE tier = ?")
-          .all(tier) as Record<string, unknown>[])
-    return rows.map(rowToMemory)
+      : (this.db.prepare("SELECT * FROM memories WHERE tier = ?").all(tier) as Record<
+          string,
+          unknown
+        >[]);
+    return rows.map(rowToMemory);
   }
 
   updateStatus(id: string, status: MemoryStatus): void {
-    this.db
-      .prepare("UPDATE memories SET status = ? WHERE id = ?")
-      .run(status, id)
+    this.db.prepare("UPDATE memories SET status = ? WHERE id = ?").run(status, id);
   }
 }
 
 function rowToMemory(row: Record<string, unknown>): Memory {
   const mem: Memory = {
-    id: row["id"] as string,
-    tier: row["tier"] as Memory["tier"],
-    scope: row["scope"] as Memory["scope"],
-    category: row["category"] as Memory["category"],
-    status: row["status"] as Memory["status"],
-    summary: row["summary"] as string,
-    content: row["content"] as string,
-    tags: JSON.parse(row["tags"] as string) as string[],
-    strength: row["strength"] as number,
+    id: row.id as string,
+    tier: row.tier as Memory["tier"],
+    scope: row.scope as Memory["scope"],
+    category: row.category as Memory["category"],
+    status: row.status as Memory["status"],
+    summary: row.summary as string,
+    content: row.content as string,
+    tags: JSON.parse(row.tags as string) as string[],
+    strength: row.strength as number,
     importanceScore: 0,
     frequencyCount: 0,
     sourceType: "manual",
-    capturedAt: row["captured_at"] as string,
-    updatedAt: row["updated_at"] as string,
+    capturedAt: row.captured_at as string,
+    updatedAt: row.updated_at as string,
     humanEditedAt: null,
-    filePath: row["file_path"] as string,
-  }
-  const projectId = row["project_id"] as string | null
-  if (projectId !== null) mem.projectId = projectId
-  return mem
+    filePath: row.file_path as string,
+  };
+  const projectId = row.project_id as string | null;
+  if (projectId !== null) mem.projectId = projectId;
+  return mem;
 }

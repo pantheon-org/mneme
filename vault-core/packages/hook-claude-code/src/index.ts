@@ -1,1 +1,1 @@
-export { loadHookCore } from "./loader.js"
+export { loadHookCore } from "./loader.js";

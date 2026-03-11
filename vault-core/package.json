@@ -1,12 +1,14 @@
 {
   "name": "vault-core-monorepo",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "bun --filter '*' run build",
-    "dev": "bun --filter '*' run dev",
+    "build": "bun run --filter='*' build",
+    "dev": "bun run --filter='*' dev",
     "test": "bun test",
-    "typecheck": "bun --filter '*' run typecheck",
+    "typecheck": "bun run --filter='*' typecheck",
     "install:hooks": "bun run scripts/install-hooks.ts",
     "install:skills": "bun run scripts/install-skills.ts",
     "install:cli": "bun --filter @vault-core/cli run install-global",

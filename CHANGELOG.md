@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+
 - Initial implementation of all 10 phases of vault-core
 - `@vault-core/types` — shared TypeScript interfaces (`Memory`, `ImportanceScore`, `RetrievalQuery`, `VaultCoreConfig`, etc.)
 - `@vault-core/core` — main library with four subsystems:

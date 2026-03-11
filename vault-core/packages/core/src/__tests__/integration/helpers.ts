@@ -1,20 +1,24 @@
-import { mkdtempSync, rmSync } from "node:fs"
-import { tmpdir } from "node:os"
-import { join } from "node:path"
-import type { Memory } from "@vault-core/types"
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { Memory } from "@vault-core/types";
 
 export function makeTmpDir(): string {
-  return mkdtempSync(join(tmpdir(), "vault-test-"))
+  return mkdtempSync(join(tmpdir(), "vault-test-"));
 }
 
 export function cleanDir(dir: string): void {
-  try { rmSync(dir, { recursive: true, force: true }) } catch { /* ignore */ }
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    /* ignore */
+  }
 }
 
-let seq = 0
+let seq = 0;
 export function makeMemory(overrides: Partial<Memory> = {}): Memory {
-  const id = `mem_test${(++seq).toString().padStart(3, "0")}`
-  const now = new Date().toISOString()
+  const id = `mem_test${(++seq).toString().padStart(3, "0")}`;
+  const now = new Date().toISOString();
   return {
     id,
     tier: "episodic",
@@ -33,9 +37,9 @@ export function makeMemory(overrides: Partial<Memory> = {}): Memory {
     humanEditedAt: null,
     filePath: "",
     ...overrides,
-  }
+  };
 }
 
 export function makeRankedMemory(mem: Memory, score = 0.5) {
-  return { memory: mem, score, bm25Rank: score * 0.5, vectorRank: score * 0.5 }
+  return { memory: mem, score, bm25Rank: score * 0.5, vectorRank: score * 0.5 };
 }

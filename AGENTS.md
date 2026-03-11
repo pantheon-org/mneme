@@ -146,6 +146,7 @@ Understanding these concepts is important when working on this codebase:
 ## Documentation
 
 All documentation lives in `docs/`. Update relevant docs when making changes to:
+
 - CLI commands → `docs/cli.md`
 - Configuration keys → `docs/configuration.md`
 - Hook/plugin behavior → `docs/hooks.md`

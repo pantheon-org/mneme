@@ -1,11 +1,11 @@
-import { parse, stringify } from "smol-toml"
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { homedir } from "node:os"
-import { join } from "node:path"
-import type { VaultCoreConfig } from "@vault-core/types"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import type { VaultCoreConfig } from "@vault-core/types";
+import { parse, stringify } from "smol-toml";
 
-const CONFIG_DIR = join(homedir(), ".vault-core")
-const CONFIG_PATH = join(CONFIG_DIR, "config.toml")
+const CONFIG_DIR = join(homedir(), ".vault-core");
+const CONFIG_PATH = join(CONFIG_DIR, "config.toml");
 
 const DEFAULT_CONFIG: VaultCoreConfig = {
   vault_path: join(homedir(), "vault-core"),
@@ -18,9 +18,9 @@ const DEFAULT_CONFIG: VaultCoreConfig = {
   scoring_weights: {
     recency: 0.25,
     frequency: 0.15,
-    importance: 0.20,
-    utility: 0.20,
-    novelty: 0.10,
+    importance: 0.2,
+    utility: 0.2,
+    novelty: 0.1,
     confidence: 0.05,
     interference: 0.05,
   },
@@ -31,20 +31,24 @@ const DEFAULT_CONFIG: VaultCoreConfig = {
     procedural: "procedural",
     archive: "archive",
   },
-}
+};
 
 export function loadConfig(): VaultCoreConfig {
   if (!existsSync(CONFIG_DIR)) {
-    mkdirSync(CONFIG_DIR, { recursive: true })
+    mkdirSync(CONFIG_DIR, { recursive: true });
   }
 
   if (!existsSync(CONFIG_PATH)) {
-    writeFileSync(CONFIG_PATH, stringify(DEFAULT_CONFIG as unknown as Record<string, unknown>), "utf-8")
-    return DEFAULT_CONFIG
+    writeFileSync(
+      CONFIG_PATH,
+      stringify(DEFAULT_CONFIG as unknown as Record<string, unknown>),
+      "utf-8",
+    );
+    return DEFAULT_CONFIG;
   }
 
-  const raw = readFileSync(CONFIG_PATH, "utf-8")
-  const parsed = parse(raw) as Partial<VaultCoreConfig>
+  const raw = readFileSync(CONFIG_PATH, "utf-8");
+  const parsed = parse(raw) as Partial<VaultCoreConfig>;
 
   return {
     ...DEFAULT_CONFIG,
@@ -57,5 +61,5 @@ export function loadConfig(): VaultCoreConfig {
       ...DEFAULT_CONFIG.vault_structure,
       ...(parsed.vault_structure ?? {}),
     },
-  }
+  };
 }

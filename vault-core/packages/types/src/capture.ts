@@ -1,30 +1,30 @@
-import type { MemoryTier, MemoryCategory } from "./memory.js"
+import type { MemoryCategory, MemoryTier } from "./memory.js";
 
 export interface CaptureHints {
-  tier?: MemoryTier
-  category?: MemoryCategory
-  tags?: string[]
-  forceCapture?: boolean
+  tier?: MemoryTier;
+  category?: MemoryCategory;
+  tags?: string[];
+  forceCapture?: boolean;
 }
 
 export interface CaptureInput {
-  content: string
-  hints?: CaptureHints
-  sourceType: "hook" | "cli" | "manual"
-  sourceHarness?: string
-  sourceSession?: string
-  projectId?: string
+  content: string;
+  hints?: CaptureHints;
+  sourceType: "hook" | "cli" | "manual";
+  sourceHarness?: string;
+  sourceSession?: string;
+  projectId?: string;
 }
 
 export interface DetectionSignal {
-  type: "keyword" | "structural" | "caller"
-  label: string
-  confidence: number
+  type: "keyword" | "structural" | "caller";
+  label: string;
+  confidence: number;
 }
 
 export interface MemoryCandidate {
-  content: string
-  signals: DetectionSignal[]
-  input: CaptureInput
-  embedding?: number[]
+  content: string;
+  signals: DetectionSignal[];
+  input: CaptureInput;
+  embedding?: number[];
 }

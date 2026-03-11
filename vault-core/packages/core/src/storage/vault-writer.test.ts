@@ -105,7 +105,7 @@ describe("VaultWriter", () => {
       const mem = makeMemory({ id: "mem_atomic" });
       writer.write(mem);
       const filePath = writer.resolveFilePath(mem);
-      expect(() => readFileSync(filePath + ".tmp")).toThrow();
+      expect(() => readFileSync(`${filePath}.tmp`)).toThrow();
     });
 
     it("creates parent directory if it does not exist", () => {

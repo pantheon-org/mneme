@@ -18,21 +18,21 @@ describe("ContextSweep", () => {
     it("returns a candidate when forceCapture hint is set", () => {
       const result = sweep.scan(makeInput("anything", { forceCapture: true }));
       expect(result).toHaveLength(1);
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ type: "caller", label: "force-capture", confidence: 1.0 }),
       );
     });
 
     it("includes hint-tier signal when tier hint is provided", () => {
       const result = sweep.scan(makeInput("decided to use postgres", { tier: "semantic" }));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "hint-tier:semantic", confidence: 0.8 }),
       );
     });
 
     it("includes hint-category signal when category hint is provided", () => {
       const result = sweep.scan(makeInput("decided to use postgres", { category: "decision" }));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "hint-category:decision", confidence: 0.8 }),
       );
     });
@@ -40,42 +40,42 @@ describe("ContextSweep", () => {
     it("detects decision keyword with confidence 0.7", () => {
       const result = sweep.scan(makeInput("We decided to use Bun as runtime"));
       expect(result).toHaveLength(1);
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ type: "keyword", label: "decision-keyword", confidence: 0.7 }),
       );
     });
 
     it("detects constraint keyword", () => {
       const result = sweep.scan(makeInput("This must never be called from main thread"));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "constraint-keyword" }),
       );
     });
 
     it("detects bugfix keyword", () => {
       const result = sweep.scan(makeInput("Fixed a regression in the auth flow"));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "bugfix-keyword" }),
       );
     });
 
     it("detects pattern keyword", () => {
       const result = sweep.scan(makeInput("The architecture follows a layered pattern"));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "pattern-keyword" }),
       );
     });
 
     it("detects discovery keyword", () => {
       const result = sweep.scan(makeInput("Turns out bun:sqlite is 3x faster than better-sqlite3"));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "discovery-keyword" }),
       );
     });
 
     it("detects preference keyword", () => {
       const result = sweep.scan(makeInput("I prefer functional style over class-based"));
-      expect(result[0]!.signals).toContainEqual(
+      expect(result[0]?.signals).toContainEqual(
         expect.objectContaining({ label: "preference-keyword" }),
       );
     });
@@ -83,7 +83,7 @@ describe("ContextSweep", () => {
     it("detects enumeration structural rule for 3+ bullet lines", () => {
       const content = "- item one\n- item two\n- item three\n";
       const result = sweep.scan(makeInput(content));
-      expect(result[0]!.signals).toContainEqual(expect.objectContaining({ label: "enumeration" }));
+      expect(result[0]?.signals).toContainEqual(expect.objectContaining({ label: "enumeration" }));
     });
 
     it("does not trigger enumeration for fewer than 3 bullet lines", () => {
@@ -95,19 +95,19 @@ describe("ContextSweep", () => {
 
     it("detects correction structural rule", () => {
       const result = sweep.scan(makeInput("actually we should use GET not POST here"));
-      expect(result[0]!.signals).toContainEqual(expect.objectContaining({ label: "correction" }));
+      expect(result[0]?.signals).toContainEqual(expect.objectContaining({ label: "correction" }));
     });
 
     it("detects tool-error structural rule", () => {
       const result = sweep.scan(makeInput("Process failed with ENOENT: no such file"));
-      expect(result[0]!.signals).toContainEqual(expect.objectContaining({ label: "tool-error" }));
+      expect(result[0]?.signals).toContainEqual(expect.objectContaining({ label: "tool-error" }));
     });
 
     it("passes content and input through to candidate", () => {
       const input = makeInput("We decided to migrate to PostgreSQL");
       const result = sweep.scan(input);
-      expect(result[0]!.content).toBe(input.content);
-      expect(result[0]!.input).toBe(input);
+      expect(result[0]?.content).toBe(input.content);
+      expect(result[0]?.input).toBe(input);
     });
   });
 });

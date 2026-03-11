@@ -60,6 +60,7 @@ Always run both before submitting a pull request.
 Tests live in `packages/core/src/__tests__/integration/`. Each test file covers a specific scenario. Follow the `T<nn>-description.test.ts` naming convention.
 
 Tests must:
+
 - Use real filesystem (temp dirs via `mkdtempSync`)
 - Use real SQLite (no mocking of `IndexDB`)
 - Clean up after themselves in `afterAll`
@@ -116,6 +117,7 @@ Tests must:
 ## Reporting issues
 
 Open an issue on GitHub with:
+
 - Bun version (`bun --version`)
 - OS and architecture
 - Steps to reproduce

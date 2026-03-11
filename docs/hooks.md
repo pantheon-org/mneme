@@ -17,6 +17,7 @@ Three scripts are registered in `~/.claude/settings.json` under the `hooks` key.
 **Script**: `~/.vault-core/hooks/claude-code/session-start.js`
 
 **Action**:
+
 1. Reads `CLAUDE_SESSION_ID` and `VAULT_PROJECT_ID` from the environment
 2. Constructs a retrieval query from available session context
 3. Runs hybrid BM25 + vector search for top-k relevant memories
@@ -25,10 +26,10 @@ Three scripts are registered in `~/.claude/settings.json` under the `hooks` key.
 
 **Environment variables read**:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `CLAUDE_SESSION_ID` | No | Session identifier for scoping |
-| `VAULT_PROJECT_ID` | No | Project scope for retrieval |
+| Variable            | Required | Description                     |
+|---------------------|----------|---------------------------------|
+| `CLAUDE_SESSION_ID` | No       | Session identifier for scoping  |
+| `VAULT_PROJECT_ID`  | No       | Project scope for retrieval     |
 
 **Output format** (stdout):
 
@@ -51,6 +52,7 @@ Three scripts are registered in `~/.claude/settings.json` under the `hooks` key.
 **Script**: `~/.vault-core/hooks/claude-code/post-tool.js`
 
 **Action**:
+
 1. Reads the tool event JSON from stdin
 2. Extracts tool name, input, output, and session metadata
 3. Calls `CaptureQueue.capture()` — returns immediately, processing is async
@@ -76,6 +78,7 @@ Three scripts are registered in `~/.claude/settings.json` under the `hooks` key.
 **Script**: `~/.vault-core/hooks/claude-code/session-stop.js`
 
 **Action**:
+
 1. Reads `CLAUDE_TRANSCRIPT_PATH` from the environment
 2. Reads the full transcript file
 3. Enqueues the transcript content for capture — async processing continues in background
@@ -83,10 +86,10 @@ Three scripts are registered in `~/.claude/settings.json` under the `hooks` key.
 
 **Environment variables read**:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `CLAUDE_TRANSCRIPT_PATH` | Yes | Path to the session transcript file |
-| `CLAUDE_SESSION_ID` | No | Session identifier |
+| Variable                 | Required | Description                          |
+|--------------------------|----------|--------------------------------------|
+| `CLAUDE_TRANSCRIPT_PATH` | Yes      | Path to the session transcript file  |
+| `CLAUDE_SESSION_ID`      | No       | Session identifier                   |
 
 ---
 
@@ -136,41 +139,44 @@ Three scripts are registered in `~/.claude/settings.json` under the `hooks` key.
 
 ## OpenCode plugin
 
-A single plugin is registered as a symlink in `~/.config/opencode/plugins/vault-core` pointing to the `hook-opencode` package.
+A single plugin is registered as a symlink in `~/.config/opencode/plugins/vault-core`
+pointing to the `plugin-opencode` package.
 
-**Plugin file**: `packages/hook-opencode/src/plugin.ts`
+**Plugin file**: `packages/plugin-opencode/src/plugin.ts`
 
-The plugin uses the `@opencode-ai/plugin` SDK and handles two events:
+The plugin uses the `@opencode-ai/plugin` SDK and handles two hooks:
 
-### `session.start`
+### `tool.execute.after`
 
-**Trigger**: OpenCode fires this event when a new session begins.
+**Trigger**: OpenCode fires this hook after every tool call completes.
 
 **Action**:
+
+1. Calls `CaptureQueue.capture()` with the tool name and args — returns immediately (non-blocking)
+
+### `experimental.chat.system.transform`
+
+**Trigger**: OpenCode fires this hook before each LLM call to allow injection into the system prompt.
+
+**Action**:
+
 1. Retrieves top-7 relevant memories using hybrid search
-2. Formats them as a Markdown context block
-3. Returns the block to OpenCode for injection into the context window
-
-### `session.idle`
-
-**Trigger**: OpenCode fires this event when the session becomes idle (between tool uses or at end of turn).
-
-**Action**:
-1. Reads current session content from the event payload
-2. Calls `CaptureQueue.capture()` — returns immediately
+2. Formats them as a Markdown context block within a 1500-token budget
+3. Pushes the block into `output.system` for injection into the system prompt
 
 ---
 
 ## AI Skills
 
-Four SKILL.md files are installed into the harness skill directories via `bun run install:skills`. They teach the agent when and how to use vault-cli directly.
+Four SKILL.md files are installed into the harness skill directories via `bun run install:skills`.
+They teach the agent when and how to use vault-cli directly.
 
-| Skill | Destination | Trigger |
-|-------|------------|---------|
-| `vault-capture` | `~/.claude/skills/` or `~/.config/opencode/skills/` | Agent detects an important decision, constraint, or pattern |
-| `vault-search` | same | Session start, "do you remember...", before implementing |
-| `vault-fetch` | same | User shares a documentation or reference URL |
-| `vault-consolidate` | same | After a long session or user requests memory cleanup |
+| Skill               | Destination                                          | Trigger                                                     |
+|---------------------|------------------------------------------------------|-------------------------------------------------------------|
+| `vault-capture`     | `~/.claude/skills/` or `~/.config/opencode/skills/`  | Agent detects an important decision, constraint, or pattern |
+| `vault-search`      | same                                                 | Session start, "do you remember...", before implementing    |
+| `vault-fetch`       | same                                                 | User shares a documentation or reference URL                |
+| `vault-consolidate` | same                                                 | After a long session or user requests memory cleanup        |
 
 ### vault-capture
 

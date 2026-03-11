@@ -48,8 +48,8 @@
         "@vault-core/types": "workspace:*",
       },
     },
-    "packages/hook-opencode": {
-      "name": "@vault-core/hook-opencode",
+    "packages/plugin-opencode": {
+      "name": "@vault-core/plugin-opencode",
       "version": "0.0.1",
       "dependencies": {
         "@opencode-ai/plugin": "*",
@@ -109,7 +109,7 @@
 
     "@vault-core/hook-claude-code": ["@vault-core/hook-claude-code@workspace:packages/hook-claude-code"],
 
-    "@vault-core/hook-opencode": ["@vault-core/hook-opencode@workspace:packages/hook-opencode"],
+    "@vault-core/plugin-opencode": ["@vault-core/plugin-opencode@workspace:packages/plugin-opencode"],
 
     "@vault-core/types": ["@vault-core/types@workspace:packages/types"],
 

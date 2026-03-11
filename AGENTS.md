@@ -12,7 +12,7 @@ graph TD
     C["@vault-core/core"]
     CLI["@vault-core/cli"]
     HC["@vault-core/hook-claude-code"]
-    HO["@vault-core/hook-opencode"]
+    HO["@vault-core/plugin-opencode"]
 
     T --> C
     C --> CLI
@@ -66,7 +66,7 @@ Use `import type` for type-only imports.
 | `@vault-core/core` | `packages/core/src/` | Main library — capture, storage, retrieval, consolidation |
 | `@vault-core/cli` | `packages/cli/src/` | `vault-cli` binary (Commander.js) |
 | `@vault-core/hook-claude-code` | `packages/hook-claude-code/src/` | Claude Code hook scripts |
-| `@vault-core/hook-opencode` | `packages/hook-opencode/src/` | OpenCode plugin |
+| `@vault-core/plugin-opencode` | `packages/plugin-opencode/src/` | OpenCode plugin |
 
 ## Key source files
 
@@ -89,7 +89,7 @@ Use `import type` for type-only imports.
 | `packages/hook-claude-code/src/session-start.ts` | SessionStart hook entry point |
 | `packages/hook-claude-code/src/post-tool.ts` | PostToolUse hook entry point |
 | `packages/hook-claude-code/src/session-stop.ts` | Stop hook entry point |
-| `packages/hook-opencode/src/plugin.ts` | OpenCode plugin entry point |
+| `packages/plugin-opencode/src/plugin.ts` | OpenCode plugin entry point |
 
 ## Testing
 

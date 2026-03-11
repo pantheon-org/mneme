@@ -1,6 +1,7 @@
 # Architecture
 
-vault-core is a Bun workspace monorepo of five TypeScript packages that implement psychology-grounded persistent memory for AI coding agents.
+vault-core is a Bun workspace monorepo of five TypeScript packages that implement
+psychology-grounded persistent memory for AI coding agents.
 
 ## Package dependency graph
 
@@ -10,7 +11,7 @@ graph TD
     C["@vault-core/core (main library)"]
     CLI["@vault-core/cli"]
     HC["@vault-core/hook-claude-code"]
-    HO["@vault-core/hook-opencode"]
+    HO["@vault-core/plugin-opencode"]
 
     T --> C
     C --> CLI
@@ -25,11 +26,13 @@ The system uses a two-tier storage architecture:
 1. **Obsidian vault** (Markdown files) — source of truth
 2. **SQLite index** (`~/.vault-core/index.db`) — derived, fully rebuildable via `vault-cli index`
 
-Every memory is a Markdown file with YAML frontmatter stored under the vault path. The SQLite index enables fast BM25 full-text search and (optionally) KNN vector search. The index can always be discarded and rebuilt from the vault.
+Every memory is a Markdown file with YAML frontmatter stored under the vault path. The SQLite
+index enables fast BM25 full-text search and (optionally) KNN vector search. The index can always
+be discarded and rebuilt from the vault.
 
 ### Vault directory layout
 
-```
+```text
 <vault_path>/
 ├── 00-inbox/
 │   └── consolidation-proposals.md   # pending human approvals
@@ -75,13 +78,14 @@ Writes are atomic: content is written to `<file>.tmp` and then renamed to `<file
 
 Three tiers map to cognitive psychology concepts:
 
-| Tier | Decay | Reconsolidation |
-|------|-------|----------------|
-| **Episodic** | Allowed (time-bounded session events) | Automatic via consolidation pipeline |
-| **Semantic** | None — binary existence | Only via explicit reconsolidation or human edit |
-| **Procedural** | None — permanent | Only via explicit revocation or human edit |
+| Tier            | Decay                                 | Reconsolidation                                    |
+|-----------------|---------------------------------------|----------------------------------------------------|
+| **Episodic**    | Allowed (time-bounded session events) | Automatic via consolidation pipeline               |
+| **Semantic**    | None — binary existence               | Only via explicit reconsolidation or human edit    |
+| **Procedural**  | None — permanent                      | Only via explicit revocation or human edit         |
 
-Ebbinghaus-style exponential time decay is applied only to episodic memories. Semantic and procedural memories are never decayed.
+Ebbinghaus-style exponential time decay is applied only to episodic memories. Semantic and
+procedural memories are never decayed.
 
 ## Capture pipeline
 
@@ -122,15 +126,15 @@ Pre-filter threshold: 0.45 composite signal confidence. Inputs below this are di
 
 Seven factors, each weighted by `scoring_weights` in config:
 
-| Factor | Weight (default) | Description |
-|--------|-----------------|-------------|
-| `recency` | 0.25 | Exponential decay with 7-day half-life |
-| `importance` | 0.20 | Signal confidence with 0.8^i diminishing returns |
-| `utility` | 0.20 | importance × confidence |
-| `frequency` | 0.15 | Access frequency count |
-| `novelty` | 0.10 | 1 − max cosine similarity against top-50 neighbours |
-| `confidence` | 0.05 | Mean signal confidence |
-| `interference` | 0.05 | Penalty applied when novelty < 0.3 |
+| Factor          | Weight (default) | Description                                          |
+|-----------------|------------------|------------------------------------------------------|
+| `recency`       | 0.25             | Exponential decay with 7-day half-life               |
+| `importance`    | 0.20             | Signal confidence with 0.8^i diminishing returns     |
+| `utility`       | 0.20             | importance × confidence                              |
+| `frequency`     | 0.15             | Access frequency count                               |
+| `novelty`       | 0.10             | 1 − max cosine similarity against top-50 neighbours  |
+| `confidence`    | 0.05             | Mean signal confidence                               |
+| `interference`  | 0.05             | Penalty applied when novelty < 0.3                   |
 
 If the composite score falls below `capture_threshold`, the candidate is rejected.
 
@@ -159,7 +163,8 @@ flowchart TD
     TOPK --> INJ
 ```
 
-Token budget enforcement: 4 chars ≈ 1 token. The injector never truncates mid-note and always includes the first memory regardless of budget.
+Token budget enforcement: 4 chars ≈ 1 token. The injector never truncates mid-note and always
+includes the first memory regardless of budget.
 
 Vector search (sqlite-vec) is optional. If the extension is unavailable, the system degrades gracefully to BM25-only.
 
@@ -184,6 +189,7 @@ flowchart TD
 ```
 
 The `Adjudicator` makes LLM inference calls via `inference_command` (a subprocess) to:
+
 - Resolve conflicts between two memories (`conflict_resolution`)
 - Synthesize a cluster into a semantic note (`consolidation`)
 
@@ -191,10 +197,10 @@ The `Adjudicator` makes LLM inference calls via `inference_command` (a subproces
 
 Two implementations, selected by config and availability:
 
-| Implementation | Mechanism | Used when |
-|---------------|-----------|----------|
+| Implementation    | Mechanism                                              | Used when                                          |
+|-------------------|--------------------------------------------------------|----------------------------------------------------|
 | `HarnessEmbedder` | Calls `inference_command` subprocess with JSON payload | Default; works with any harness that exposes a CLI |
-| `LocalEmbedder` | `@xenova/transformers` (dynamically imported) | When configured and the package is available |
+| `LocalEmbedder`   | `@xenova/transformers` (dynamically imported)          | When configured and the package is available       |
 
 `LocalEmbedder` falls back to `HarnessEmbedder` if the local model is unavailable.
 
@@ -204,20 +210,20 @@ Two implementations, selected by config and availability:
 
 Three hook scripts are registered in `~/.claude/settings.json`:
 
-| Hook | Trigger | Action |
-|------|---------|--------|
-| `session-start.ts` | `SessionStart` | Embed session context → retrieve top-k → inject to stdout |
-| `post-tool.ts` | `PostToolUse` (all tools) | Read tool event from stdin → enqueue for capture |
-| `session-stop.ts` | `Stop` | Read transcript from `CLAUDE_TRANSCRIPT_PATH` → enqueue |
+| Hook               | Trigger                   | Action                                                |
+|--------------------|---------------------------|-------------------------------------------------------|
+| `session-start.ts` | `SessionStart`            | Embed session context → retrieve top-k → inject       |
+| `post-tool.ts`     | `PostToolUse` (all tools) | Read tool event from stdin → enqueue for capture      |
+| `session-stop.ts`  | `Stop`                    | Read transcript from `CLAUDE_TRANSCRIPT_PATH` → queue |
 
 ### OpenCode
 
-A single plugin (`hook-opencode`) listens to two events:
+A single plugin (`plugin-opencode`) handles two hooks:
 
-| Event | Action |
-|-------|--------|
-| `session.idle` | Capture session content |
-| `session.start` | Retrieve top-7 relevant memories → inject to stdout |
+| Hook                                 | Action                                                        |
+|--------------------------------------|---------------------------------------------------------------|
+| `tool.execute.after`                 | Capture tool name and args via `CaptureQueue` (non-blocking)  |
+| `experimental.chat.system.transform` | Retrieve top-7 relevant memories → inject into system prompt  |
 
 ## SQLite schema
 
@@ -257,11 +263,13 @@ CREATE TABLE memory_vecs (
 );
 ```
 
-Database is opened with `PRAGMA journal_mode=WAL`.
+The database is opened with `PRAGMA journal_mode=WAL`.
 
 ## Human-edit immunity
 
-`VaultReader` detects external edits by comparing `mtime` of the file against the stored `updated_at` timestamp. When a mismatch is found, `human_edited_at` is set on the memory in the index. Memories with `human_edited_at` set are never overwritten by automated reconsolidation.
+`VaultReader` detects external edits by comparing `mtime` of the file against the stored
+`updated_at` timestamp. When a mismatch is found, `human_edited_at` is set on the memory in the
+index. Memories with `human_edited_at` set are never overwritten by automated reconsolidation.
 
 ## Design invariants
 

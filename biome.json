@@ -6,13 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true,
-    "ignore": [
-      "vault-core/node_modules",
-      "vault-core/dist",
-      "vault-core/packages/*/dist",
-      "vault-core/packages/*/node_modules"
-    ]
+    "ignoreUnknown": true
   },
   "formatter": {
     "enabled": true,

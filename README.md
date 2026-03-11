@@ -97,7 +97,7 @@ mneme/
 │   │   ├── core/                # @vault-core/core — main library
 │   │   ├── cli/                 # @vault-core/cli — vault-cli binary
 │   │   ├── hook-claude-code/    # @vault-core/hook-claude-code
-│   │   └── hook-opencode/       # @vault-core/hook-opencode
+│   │   └── plugin-opencode/     # @vault-core/plugin-opencode
 │   └── skills/                  # Harness-agnostic SKILL.md files
 ├── docs/                        # Technical documentation
 └── scripts/                     # Repository-level scripts

@@ -28,7 +28,7 @@ This is a Bun workspace monorepo. All source code lives in `vault-core/packages/
 | `@vault-core/core` | Main library: capture, storage, retrieval, consolidation |
 | `@vault-core/cli` | `vault-cli` binary |
 | `@vault-core/hook-claude-code` | Claude Code hooks |
-| `@vault-core/hook-opencode` | OpenCode plugin |
+| `@vault-core/plugin-opencode` | OpenCode plugin |
 
 ## Making changes
 

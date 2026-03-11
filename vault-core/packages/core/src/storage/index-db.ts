@@ -190,6 +190,20 @@ export class IndexDB {
   updateStatus(id: string, status: MemoryStatus): void {
     this.db.prepare("UPDATE memories SET status = ? WHERE id = ?").run(status, id);
   }
+
+  delete(id: string): void {
+    this.db.prepare("DELETE FROM memories WHERE id = ?").run(id);
+    this.db.prepare("DELETE FROM memories_fts WHERE id = ?").run(id);
+    try {
+      this.db.prepare("DELETE FROM memory_vecs WHERE id = ?").run(id);
+    } catch {
+      // vec extension unavailable
+    }
+  }
+
+  allIds(): string[] {
+    return (this.db.prepare("SELECT id FROM memories").all() as { id: string }[]).map((r) => r.id);
+  }
 }
 
 function rowToMemory(row: Record<string, unknown>): Memory {

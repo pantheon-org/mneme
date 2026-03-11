@@ -7,7 +7,7 @@
     "dev": "bun --filter '*' run dev",
     "test": "bun test",
     "typecheck": "bun --filter '*' run typecheck",
-    "install:hooks": "bun --filter @vault-core/hook-claude-code run install-hooks && bun --filter @vault-core/hook-opencode run install-plugin",
+    "install:hooks": "bun run scripts/install-hooks.ts",
     "install:skills": "bun run scripts/install-skills.ts",
     "install:cli": "bun --filter @vault-core/cli run install-global"
   },

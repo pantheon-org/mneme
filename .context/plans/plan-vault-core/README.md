@@ -16,7 +16,7 @@ A locally-installable TypeScript monorepo that provides psychology-grounded, Obs
 | 05 | [consolidation-loop](phases/phase-05-consolidation-loop/README.md) | complete | 3 |
 | 06 | [cli-package](phases/phase-06-cli-package/README.md) | complete | 3 |
 | 07 | [hook-packages](phases/phase-07-hook-packages/README.md) | complete | 3 |
-| 08 | [skills](phases/phase-08-skills/README.md) | pending | 2 |
+| 08 | [skills](phases/phase-08-skills/README.md) | complete | 2 |
 | 09 | [integration-testing](phases/phase-09-integration-testing/README.md) | pending | 7 |
 
 ## Constraints

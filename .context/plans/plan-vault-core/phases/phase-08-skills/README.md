@@ -6,9 +6,9 @@ Produce four SKILL.md files (vault-capture, vault-search, vault-fetch, vault-con
 
 ## Gate
 
-- [ ] `bun install:skills` exits 0 and copies all four SKILL.md files to `~/.claude/skills/` and `~/.config/opencode/skills/`
-- [ ] Each installed SKILL.md has correct YAML frontmatter (`name`, `description`, `allowed-tools: Bash`)
-- [ ] Re-running `bun install:skills` does not produce errors (idempotent)
+- [x] `bun install:skills` exits 0 and copies all four SKILL.md files to `~/.claude/skills/` and `~/.config/opencode/skills/`
+- [x] Each installed SKILL.md has correct YAML frontmatter (`name`, `description`, `allowed-tools: Bash`)
+- [x] Re-running `bun install:skills` does not produce errors (idempotent)
 
 ## Dependencies
 

@@ -29,6 +29,7 @@ pre-push:
 
     - name: test
       glob:
-        - "vault-core/**/*.test.ts"
+        - "vault-core/packages/core/src/__tests__/features/**/*.feature"
+        - "vault-core/packages/core/src/__tests__/features/steps/**/*.ts"
       root: vault-core
-      run: bun test
+      run: bun run test:bdd

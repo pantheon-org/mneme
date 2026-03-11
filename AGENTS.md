@@ -28,13 +28,13 @@ Run all commands from `vault-core/`:
 bun install              # install dependencies
 bun run build            # compile all packages (tsc --build)
 bun run typecheck        # type-check all packages (no emit)
-bun test                 # run integration tests
+bun run test:bdd         # run BDD integration tests (Cucumber)
 bun run install:hooks    # register hooks with Claude Code and OpenCode
 bun run install:skills   # copy SKILL.md files to harness skill directories
 bun run install:cli      # make vault-cli globally available
 ```
 
-Always run `bun run typecheck` after making changes. Run `bun test` to verify integration.
+Always run `bun run typecheck` after making changes. Run `bun run test:bdd` to verify integration.
 
 ## Code conventions
 
@@ -100,24 +100,29 @@ Use `import type` for type-only imports.
 
 ## Testing
 
-Tests live in `packages/core/src/__tests__/integration/`. There are 10 integration test suites:
+Integration tests use full Cucumber BDD with Gherkin `.feature` files and TypeScript step definitions.
 
-| File | What it covers |
-|------|---------------|
-| `T01-capture-retrieve-roundtrip.test.ts` | Full pipeline: write → index → search |
-| `T02-scope-isolation.test.ts` | Project scope filtering correctness |
-| `T03-human-edit-immunity.test.ts` | External edit detection via mtime |
-| `T04-conflict-detection.test.ts` | Vector fallback when sqlite-vec unavailable |
-| `T05-consolidation-proposal.test.ts` | Episodic clustering and approval rendering |
-| `T06-queue-durability.test.ts` | `pending.jsonl` persistence across restart |
-| `T07-token-budget.test.ts` | Injector token budget enforcement |
-| `T08-signal-detection.test.ts` | Sweep signal detection rules |
-| `T09-retrieval-ranking.test.ts` | Hybrid search result ranking |
-| `T09a-retrieval-filtering.test.ts` | Retrieval scope and tier filtering |
+- Feature files: `packages/core/src/__tests__/features/*.feature`
+- Step definitions: `packages/core/src/__tests__/features/steps/*.ts`
+- Shared world: `packages/core/src/__tests__/features/steps/world.ts`
+- Runner config: `cucumber.json` at workspace root
+
+| Feature file | What it covers |
+|---|---|
+| `T01-capture-retrieve-roundtrip.feature` | Full pipeline: write → index → search |
+| `T02-scope-isolation.feature` | Project scope filtering correctness |
+| `T03-human-edit-immunity.feature` | External edit detection via mtime |
+| `T04-conflict-detection.feature` | Vector fallback when sqlite-vec unavailable |
+| `T05-consolidation-proposal.feature` | Episodic clustering and approval rendering |
+| `T06-queue-durability.feature` | `pending.jsonl` persistence across restart |
+| `T07-token-budget.feature` | Injector token budget enforcement |
+| `T08-signal-detection.feature` | Sweep signal detection rules |
+| `T09-retrieval-ranking.feature` | Hybrid search result ranking |
+| `T09a-retrieval-filtering.feature` | Retrieval scope and tier filtering |
 
 Tests use real filesystem (temp dirs) and real SQLite. No mocking except `MockAdjudicator` in T05.
 
-When adding new functionality, add a corresponding integration test following the `T<nn>-description.test.ts` naming pattern.
+When adding new functionality, add a corresponding `.feature` file and step definitions following the `T<nn>-description.feature` naming pattern. Tag each feature with `@T<nn>` and add matching `Before`/`After` hooks in the step file.
 
 ## Memory model (domain concepts)
 

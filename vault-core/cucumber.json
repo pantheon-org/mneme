@@ -1,0 +1,8 @@
+{
+  "default": {
+    "import": ["packages/core/src/__tests__/features/steps/**/*.ts"],
+    "paths": ["packages/core/src/__tests__/features/**/*.feature"],
+    "format": ["@cucumber/pretty-formatter"],
+    "forceExit": true
+  }
+}

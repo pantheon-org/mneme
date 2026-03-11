@@ -12,7 +12,7 @@
     "build": "bunx tsc --build",
     "dev": "bunx tsc --watch",
     "typecheck": "bunx tsc --noEmit",
-    "install-global": "bun link"
+    "install-global": "ln -sf \"$(pwd)/dist/index.js\" \"$(bun pm bin -g)/vault-cli\""
   },
   "dependencies": {
     "@vault-core/core": "workspace:*",

@@ -11,7 +11,7 @@
     "typecheck": "bun run --filter='*' typecheck",
     "install:hooks": "bun run scripts/install-hooks.ts",
     "install:skills": "bun run scripts/install-skills.ts",
-    "install:cli": "bun --filter @vault-core/cli run install-global",
+    "install:cli": "bun run --cwd packages/cli install-global",
     "lint": "bunx --bun biome check .",
     "lint:fix": "bunx --bun biome check --write .",
     "lint:md": "bunx markdownlint-cli2 \"../**/*.md\" \"#node_modules\" \"#dist\" \"#../.tessl\" \"#../.context\"",

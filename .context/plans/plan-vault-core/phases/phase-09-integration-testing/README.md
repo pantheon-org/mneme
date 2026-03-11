@@ -6,9 +6,9 @@ End-to-end test suite that exercises the full capture → index → retrieve pip
 
 ## Gate
 
-- [ ] `bun test` exits 0 with all 7 integration scenarios passing
-- [ ] Scope-isolation test: project-B memories never appear in project-A retrieval results
-- [ ] Queue-durability test: pending items survive process restart and are replayed correctly
+- [x] `bun test` exits 0 with all 7 integration scenarios passing (17 assertions)
+- [x] Scope-isolation test: project-B memories never appear in project-A retrieval results
+- [x] Queue-durability test: pending items survive process restart and are replayed correctly
 
 ## Dependencies
 

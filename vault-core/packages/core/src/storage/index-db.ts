@@ -3,8 +3,8 @@ import { mkdirSync } from "node:fs"
 import { dirname } from "node:path"
 import type { Memory, MemoryTier, MemoryStatus } from "@vault-core/types"
 
-const SCHEMA = /* sql */ `
-  CREATE TABLE IF NOT EXISTS memories (
+const STATEMENTS = [
+  /* sql */ `CREATE TABLE IF NOT EXISTS memories (
     id          TEXT PRIMARY KEY,
     tier        TEXT NOT NULL,
     scope       TEXT NOT NULL,
@@ -19,33 +19,14 @@ const SCHEMA = /* sql */ `
     captured_at TEXT NOT NULL,
     updated_at  TEXT NOT NULL,
     mtime_ns    INTEGER NOT NULL DEFAULT 0
-  );
-
-  CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+  )`,
+  /* sql */ `CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+    id,
     summary,
     content,
-    tags,
-    content=memories,
-    content_rowid=rowid
-  );
-
-  CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
-    INSERT INTO memories_fts(rowid, summary, content, tags)
-    VALUES (new.rowid, new.summary, new.content, new.tags);
-  END;
-
-  CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
-    INSERT INTO memories_fts(memories_fts, rowid, summary, content, tags)
-    VALUES ('delete', old.rowid, old.summary, old.content, old.tags);
-    INSERT INTO memories_fts(rowid, summary, content, tags)
-    VALUES (new.rowid, new.summary, new.content, new.tags);
-  END;
-
-  CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
-    INSERT INTO memories_fts(memories_fts, rowid, summary, content, tags)
-    VALUES ('delete', old.rowid, old.summary, old.content, old.tags);
-  END;
-`
+    tags
+  )`,
+]
 
 export interface BM25Result {
   id: string
@@ -65,7 +46,9 @@ export class IndexDB {
     mkdirSync(dirname(indexPath), { recursive: true })
     this.db = new Database(indexPath)
     this.db.run("PRAGMA journal_mode=WAL")
-    this.db.run(SCHEMA)
+    for (const stmt of STATEMENTS) {
+      this.db.run(stmt)
+    }
     this.initVec()
   }
 
@@ -123,6 +106,13 @@ export class IndexDB {
         $updated_at: memory.updatedAt,
         $mtime_ns: 0,
       })
+
+    this.db
+      .prepare(`DELETE FROM memories_fts WHERE id = ?`)
+      .run(memory.id)
+    this.db
+      .prepare(`INSERT INTO memories_fts(id, summary, content, tags) VALUES (?, ?, ?, ?)`)
+      .run(memory.id, memory.summary, memory.content, JSON.stringify(memory.tags))
   }
 
   upsertVector(id: string, embedding: number[]): void {
@@ -140,16 +130,27 @@ export class IndexDB {
   }
 
   bm25Search(query: string, limit = 30): BM25Result[] {
-    return this.db
-      .prepare(/* sql */ `
-        SELECT m.id, m.summary, fts.rank
-        FROM memories_fts fts
-        JOIN memories m ON m.rowid = fts.rowid
-        WHERE memories_fts MATCH ?
-        ORDER BY fts.rank
-        LIMIT ?
-      `)
-      .all(query, limit) as BM25Result[]
+    const ftsQuery = query
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w.replace(/['"*^(){}[\]:]/g, ""))
+      .filter(Boolean)
+      .join(" OR ")
+    if (!ftsQuery) return []
+    try {
+      return this.db
+        .prepare(/* sql */ `
+          SELECT fts.id, fts.summary, fts.rank
+          FROM memories_fts fts
+          WHERE memories_fts MATCH ?
+          ORDER BY fts.rank
+          LIMIT ?
+        `)
+        .all(ftsQuery, limit) as BM25Result[]
+    } catch {
+      return []
+    }
   }
 
   knnSearch(embedding: number[], limit = 30): VecResult[] {

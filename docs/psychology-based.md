@@ -1,38 +1,43 @@
-# Psychology Based
+# Psychology-Based Design Rationale
 
-## 1. The Flaw of "Time-Based" Decay in Technical Contexts
+vault-core's memory model is grounded in cognitive psychology. This document explains the key design decisions and why naive approaches were rejected.
 
-Human memory decays because biological storage is optimized for recent survival. In coding, truth does not decay strictly based on time.
+## 1. No time-based decay for semantic memory
 
-The Problem: Using the Ebbinghaus forgetting curve means that if a user establishes a critical project constraint ("We use strict TypeScript null checks") and doesn't mention it for a week, the system will slowly decay its strength using S(t)=S0​e−λt until it is forgotten.
-The Reality: Architectural decisions are binary and permanent until explicitly revoked.
-The Fix: You need to decouple Episodic Memory (e.g., "Yesterday we struggled with the auth token") from Semantic Memory (e.g., "This project uses JWTs"). Episodic memory can decay exponentially. Semantic memory should only decay through explicit interference or reconsolidation (when the user says, "Actually, we are switching to session cookies").
+Human memory decays because biological storage is optimised for recent survival. In software development, truth does not decay based on time.
 
-## 2. Jaccard Similarity is Inadequate for Semantic Meaning
+A critical project constraint such as "We use strict TypeScript null checks" does not become less true after a week of inactivity. Applying Ebbinghaus forgetting curve decay (`S(t) = S₀e^(−λt)`) to such a constraint would cause it to erode and eventually be discarded — silently breaking the agent's understanding of the project.
 
-Your proposed implementation for Novelty and Interference relies heavily on Jaccard Similarity (bag-of-words overlap).
+The solution is to decouple memory tiers:
 
-The Problem: Jaccard similarity is notoriously brittle for human language. "The database is broken" and "Postgres keeps crashing" have a Jaccard index of 0.0, yet they describe the exact same problem. Conversely, "I love writing Python" and "I hate writing Python" have a high Jaccard index but opposite meanings.
-The Fix: Replace Jaccard indexing with dense vector embeddings (like text-embedding-3-small or an open-source model like BGE). You can compute the Cosine Similarity between the embedding vectors to catch semantic overlaps, which will drastically improve your novelty, deduplication, and interference calculations.
+- **Episodic** memories (e.g., "Yesterday we struggled with the auth token") represent time-bound events and may decay.
+- **Semantic** memories (e.g., "This project uses JWTs") represent distilled facts and change only through explicit reconsolidation.
+- **Procedural** memories represent permanent how-to knowledge, revoked only explicitly.
 
-## 3. The Retrieval Gap (How do memories get back in?)
+Ebbinghaus decay is applied only to the episodic tier.
 
-Your document comprehensively covers the encoding and storage of memories (Stage 1 and Stage 2), but it glosses over retrieval.
+## 2. Dense vector embeddings instead of Jaccard similarity
 
-The Problem: If PsychMem accumulates hundreds of LTMs (Long-Term Memories), you cannot simply inject all "User-Level" or "Project-Level" memories into the system prompt. This will bloat the context window, increase latency, and cause the LLM to hallucinate or focus on irrelevant past constraints.
-The Fix: You need a Stage 3: Contextual Retrieval. Instead of auto-injecting everything, the agent should take the user's current prompt, embed it, and perform a nearest-neighbor vector search against the LTM database. Only the top k most relevant memories should be injected into the working context.
+Novelty and interference detection based on bag-of-words overlap (Jaccard similarity) is inadequate for natural language.
 
-## 4. Latency and The Cost of Per-Message Extraction
+"The database is broken" and "Postgres keeps crashing" have a Jaccard index of 0.0, yet describe the same problem. Conversely, "I love writing Python" and "I hate writing Python" have high Jaccard overlap but opposite meanings.
 
-Extracting memory candidates after every message (v1.9) introduces a significant architectural bottleneck.
+vault-core computes cosine similarity between dense vector embeddings (via `text-embedding-3-small` or a configured local model). This catches semantic overlap that surface-level token matching misses, and correctly differentiates statements with similar tokens but opposite meaning.
 
-The Problem: If you rely on an LLM to perform the "Feature Scoring" and "Candidate Extraction," your system will double its latency and API costs. If you rely on the regex pre-filter (/remember|important|always.../), you will miss implicit importance, rendering the psychology-grounded aspect moot. Many vital architectural decisions are stated plainly without exclamation marks or keywords (e.g., "The API rate limit is 50 req/sec").
-The Fix: Run the Context Sweep asynchronously as a background daemon. Let the agent respond to the user immediately, while a separate, smaller background model processes the conversation stream, scores it, and updates the database without blocking the primary conversation loop.
+## 3. Contextual retrieval instead of full injection
 
-## 5. False Interference and Destructive Updates
+Accumulating hundreds of memories and injecting all of them into the context window bloats the prompt, increases latency, and causes the model to fixate on irrelevant past constraints.
 
-Your interference detection triggers when similarity is between 0.3 and 0.8.
+vault-core implements a hybrid BM25 + vector retrieval pipeline. At session start, the current context is embedded and compared against all stored memories. Only the top-k most relevant memories (configurable via `top_k_retrieval`) are injected. This keeps the injected context focused and within budget.
 
-The Problem: Automatically penalizing or overwriting memories based on partial similarity can be destructive. If memory A is "User prefers modular functions" and memory B is "User prefers pure functions," these are complementary, not conflicting. Deduplicating or penalizing them will cause the AI to lose nuance.
-The Fix: When high semantic interference is detected, do not automatically adjust confidence. Instead, trigger a "Reconsolidation LLM call" that specifically asks a small, fast model to evaluate the two statements: "Do these two facts contradict, complement, or duplicate each other?"
-Would you like me to draft an updated mathematical model for the "Strength Calculation" that factors in cosine similarity and vector embeddings instead of the Jaccard index?
+## 4. Asynchronous capture to avoid latency
+
+Extracting memory candidates after every tool call via a blocking LLM call would double agent latency and API costs. A lightweight regex pre-filter would miss implicit importance — many critical architectural decisions are stated plainly without trigger keywords (e.g., "The API rate limit is 50 req/sec").
+
+vault-core runs the Context Sweep asynchronously. The agent responds to the user immediately. A background queue processes the tool event stream, applies rule-based signal detection, embeds, scores, and indexes without blocking the primary conversation loop. The `CaptureQueue.capture()` call returns in under 5 ms.
+
+## 5. Reconsolidation instead of automatic overwrite
+
+Automatic penalisation or overwriting of memories based on partial similarity is destructive. "User prefers modular functions" and "User prefers pure functions" are complementary, not conflicting. Deduplicating them discards nuance.
+
+When high semantic interference is detected (novelty < 0.3), vault-core does not automatically overwrite. Instead, it routes the candidate pair to the `Adjudicator`, which invokes a fast LLM call specifically to evaluate whether the two statements contradict, complement, or duplicate each other. Conflicts are surfaced in the human-review inbox rather than resolved silently.

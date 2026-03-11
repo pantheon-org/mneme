@@ -19,7 +19,7 @@ const main = async (): Promise<void> => {
     const block = injector.format(memories);
     if (!block.markdown.trim()) return;
 
-    process.stdout.write(JSON.stringify({ type: "inject", content: block.markdown }) + "\n");
+    process.stdout.write(`${JSON.stringify({ type: "inject", content: block.markdown })}\n`);
   } catch {
     process.exitCode = 0;
   }

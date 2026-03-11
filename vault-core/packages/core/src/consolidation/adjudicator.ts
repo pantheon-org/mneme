@@ -4,8 +4,6 @@ import type { AuditLog } from "../storage/audit-log.js";
 import type { ConsolidationProposal } from "./consolidation-proposal.js";
 import { validCategory, validScope } from "./validation-helpers.js";
 
-const INFERENCE_TIMEOUT_MS = 30_000;
-
 const parseCommand = (cmd: string): string[] => {
   const result: string[] = [];
   const re = /(?:"([^"]*)")|(?:'([^']*)')|(\S+)/g;

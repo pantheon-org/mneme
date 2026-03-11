@@ -1,0 +1,25 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "vault-core/**/*.{js,ts,tsx,json,jsonc}"
+      run: bunx --bun biome check --write {staged_files}
+      stage_fixed: true
+
+    - name: markdownlint
+      glob: "**/*.md"
+      run: bunx markdownlint-cli2 --fix {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: biome-check
+      run: bunx --bun biome check vault-core/
+
+    - name: markdownlint-check
+      run: bunx markdownlint-cli2 "**/*.md" "#vault-core/node_modules" "#vault-core/dist" "#.tessl" "#.context"
+
+    - name: typecheck
+      run: bun run typecheck
+      working_directory: vault-core

@@ -27,7 +27,7 @@ function writeJson(path: string, data: unknown): void {
 console.log("Installing Claude Code hooks...");
 mkdirSync(HOOK_DIR, { recursive: true });
 
-for (const file of ["session-start.js", "post-tool.js", "session-stop.js"]) {
+for (const file of ["post-tool.js", "session-stop.js"]) {
   const src = join(DIST_DIR, file);
   const dst = join(HOOK_DIR, file);
   if (existsSync(src)) {
@@ -51,7 +51,6 @@ interface ClaudeSettings {
   hooks?: {
     PostToolUse?: ClaudeHookMatcher[];
     Stop?: ClaudeHookEntry[];
-    SessionStart?: ClaudeHookEntry[];
   };
   [key: string]: unknown;
 }
@@ -61,7 +60,6 @@ if (!claudeSettings.hooks) claudeSettings.hooks = {};
 
 const postToolCmd = `bun ${join(HOOK_DIR, "post-tool.js")}`;
 const stopCmd = `bun ${join(HOOK_DIR, "session-stop.js")}`;
-const startCmd = `bun ${join(HOOK_DIR, "session-start.js")}`;
 
 if (!claudeSettings.hooks.PostToolUse) claudeSettings.hooks.PostToolUse = [];
 const postToolHooks = claudeSettings.hooks.PostToolUse;
@@ -77,12 +75,6 @@ if (!claudeSettings.hooks.Stop) claudeSettings.hooks.Stop = [];
 const stopHooks = claudeSettings.hooks.Stop;
 if (!stopHooks.some((h) => h.command === stopCmd)) {
   stopHooks.push({ type: "command", command: stopCmd });
-}
-
-if (!claudeSettings.hooks.SessionStart) claudeSettings.hooks.SessionStart = [];
-const startHooks = claudeSettings.hooks.SessionStart;
-if (!startHooks.some((h) => h.command === startCmd)) {
-  startHooks.push({ type: "command", command: startCmd });
 }
 
 writeJson(CLAUDE_SETTINGS, claudeSettings);

@@ -152,3 +152,7 @@ All documentation lives in `docs/`. Update relevant docs when making changes to:
 - Hook/plugin behavior → `docs/hooks.md`
 - Public API → `docs/api.md`
 - Architecture → `docs/architecture.md`
+
+# Agent Rules <!-- tessl-managed -->
+
+@.tessl/RULES.md follow the [instructions](.tessl/RULES.md)

@@ -59,6 +59,9 @@
     },
     "tessl/npm-cucumber--cucumber": {
       "version": "12.2.0"
+    },
+    "tessl-labs/tessl-skill-eval-scenarios": {
+      "version": "0.1.0"
     }
   }
 }

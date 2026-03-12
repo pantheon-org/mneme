@@ -1,0 +1,20 @@
+{
+  "name": "pantheon-ai/vault-core",
+  "version": "0.1.0",
+  "private": true,
+  "summary": "",
+  "skills": {
+    "vault-capture": {
+      "path": "vault-capture/SKILL.md"
+    },
+    "vault-consolidate": {
+      "path": "vault-consolidate/SKILL.md"
+    },
+    "vault-fetch": {
+      "path": "vault-fetch/SKILL.md"
+    },
+    "vault-search": {
+      "path": "vault-search/SKILL.md"
+    }
+  }
+}

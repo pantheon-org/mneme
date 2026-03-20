@@ -1,14 +1,13 @@
 #!/usr/bin/env bun
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
-const HOOK_DIR = join(homedir(), ".vault-core", "hooks", "claude-code");
 const CLAUDE_SETTINGS = join(homedir(), ".claude", "settings.json");
 const _OPENCODE_CONFIG = join(homedir(), ".config", "opencode", "opencode.json");
 const OPENCODE_PLUGIN_DIR = join(homedir(), ".config", "opencode", "plugins", "vault-core");
 
-const DIST_DIR = resolve(import.meta.dir, "..", "packages", "hook-claude-code", "dist");
+const SRC_DIR = resolve(import.meta.dir, "..", "packages", "hook-claude-code", "src");
 
 function readJson<T>(path: string, fallback: T): T {
   try {
@@ -23,22 +22,7 @@ function writeJson(path: string, data: unknown): void {
   writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
 }
 
-// ── 1. Copy compiled hooks ──────────────────────────────────────────────────
-console.log("Installing Claude Code hooks...");
-mkdirSync(HOOK_DIR, { recursive: true });
-
-for (const file of ["post-tool.js", "session-stop.js"]) {
-  const src = join(DIST_DIR, file);
-  const dst = join(HOOK_DIR, file);
-  if (existsSync(src)) {
-    copyFileSync(src, dst);
-    console.log(`  copied ${file} → ${dst}`);
-  } else {
-    console.warn(`  warning: ${src} not found (run bun run build first)`);
-  }
-}
-
-// ── 2. Patch ~/.claude/settings.json ──────────────────────────────────────
+// ── 1. Patch ~/.claude/settings.json ──────────────────────────────────────
 interface ClaudeHookEntry {
   type: string;
   command: string;
@@ -58,8 +42,10 @@ interface ClaudeSettings {
 const claudeSettings = readJson<ClaudeSettings>(CLAUDE_SETTINGS, {});
 if (!claudeSettings.hooks) claudeSettings.hooks = {};
 
-const postToolCmd = `bun ${join(HOOK_DIR, "post-tool.js")}`;
-const stopCmd = `bun ${join(HOOK_DIR, "session-stop.js")}`;
+console.log("Installing Claude Code hooks...");
+
+const postToolCmd = `bun ${join(SRC_DIR, "post-tool.ts")}`;
+const stopCmd = `bun ${join(SRC_DIR, "session-stop.ts")}`;
 
 if (!claudeSettings.hooks.PostToolUse) claudeSettings.hooks.PostToolUse = [];
 const postToolHooks = claudeSettings.hooks.PostToolUse;
@@ -78,6 +64,7 @@ if (!stopHooks.some((h) => h.command === stopCmd)) {
 }
 
 writeJson(CLAUDE_SETTINGS, claudeSettings);
+console.log(`  registered hooks → ${SRC_DIR}`);
 console.log(`  patched ${CLAUDE_SETTINGS}`);
 
 // ── 3. Install OpenCode plugin symlink ─────────────────────────────────────

@@ -1,0 +1,60 @@
+name: '✅ Gemini Complete'
+
+on:
+  pull_request:
+    types:
+      - 'closed'
+
+defaults:
+  run:
+    shell: 'bash'
+
+jobs:
+  complete:
+    if: 'github.event.pull_request.merged == true'
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 5
+    permissions:
+      contents: 'read'
+      issues: 'write'
+      pull-requests: 'read'
+    steps:
+      - name: 'Update linked issue labels'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        with:
+          script: |-
+            const body = context.payload.pull_request.body ?? '';
+            const match = body.match(/(?:closes?|fixes?|resolves?)\s+#(\d+)/i);
+            if (!match) {
+              core.info('No linked issue found in PR body — nothing to update.');
+              return;
+            }
+
+            const issueNumber = parseInt(match[1], 10);
+            core.info(`Linked issue: #${issueNumber}`);
+
+            for (const label of ['status: wip', 'status: ready']) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  name: label,
+                });
+                core.info(`Removed label: ${label}`);
+              } catch {
+                core.info(`Label "${label}" was not present on #${issueNumber}`);
+              }
+            }
+
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['status: completed'],
+              });
+              core.info('Applied label: status: completed');
+            } catch (e) {
+              core.warning(`Could not apply status: completed: ${e.message}. Ensure the label exists in the repository.`);
+            }

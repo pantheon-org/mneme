@@ -22,6 +22,12 @@ defaults:
   run:
     shell: 'bash'
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+  issues: 'write'
+  pull-requests: 'write'
+
 jobs:
   dispatch:
     # For PRs: only if not from a fork
@@ -34,11 +40,6 @@ jobs:
       startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@gemini-cli') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association))
     runs-on: 'ubuntu-latest'
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-      issues: 'write'
-      pull-requests: 'write'
     outputs:
       command: '${{ steps.extract_command.outputs.command }}'
       request: '${{ steps.extract_command.outputs.request }}'

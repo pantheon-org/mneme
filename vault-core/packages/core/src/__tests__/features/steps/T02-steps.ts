@@ -1,4 +1,4 @@
-import { After, Before, Given, Then, When } from "@cucumber/cucumber";
+import { After, Before, Then, When } from "@cucumber/cucumber";
 import { IndexDB } from "../../../storage/index-db.js";
 import { VaultWriter } from "../../../storage/vault-writer.js";
 import { makeMemory, type VaultWorld } from "./world.js";
@@ -39,10 +39,11 @@ When("I write 10 memories scoped to {string}", function (this: VaultWorld, proje
 Then(
   "BM25 search for {string} filtered to {string} returns no {string} memories",
   function (this: VaultWorld, query: string, filterProject: string, excludeProject: string) {
-    const db = betaDb!;
+    if (!betaDb) throw new Error("betaDb not initialized");
+    const db = betaDb;
     const allResults = db.bm25Search(query, 30);
     if (allResults.length === 0) {
-      betaDb!.close();
+      betaDb.close();
       betaDb = null;
       return;
     }
@@ -53,12 +54,12 @@ Then(
     });
     for (const result of filtered) {
       if (alphaSet.has(result.id)) {
-        betaDb!.close();
+        betaDb.close();
         betaDb = null;
         throw new Error(`Found ${excludeProject} memory ${result.id} in ${filterProject} results`);
       }
     }
-    betaDb!.close();
+    betaDb.close();
     betaDb = null;
     alphaMemoryIds = [];
   },

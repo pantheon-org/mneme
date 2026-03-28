@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { After, Before, Given, Then, When } from "@cucumber/cucumber";
-import type { Memory, RankedMemory } from "@vault-core/types";
+import type { RankedMemory } from "@vault-core/types";
 import { Injector } from "../../../retrieval/injector.js";
 import { HybridRetriever } from "../../../retrieval/retriever.js";
 import type { Embedder } from "../../../scoring/embedder.js";

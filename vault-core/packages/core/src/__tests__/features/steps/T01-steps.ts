@@ -82,7 +82,8 @@ Then(
   "reading that memory from the vault returns the exact same fields",
   function (this: VaultWorld) {
     const reader = new VaultReader();
-    const original = this.lastReadMemory!;
+    if (!this.lastReadMemory) throw new Error("No memory was previously read");
+    const original = this.lastReadMemory;
     const read = reader.read(original.filePath);
     if (!read) throw new Error("Memory not found in vault");
     if (read.id !== original.id) throw new Error(`id mismatch: ${read.id} !== ${original.id}`);

@@ -1,0 +1,85 @@
+name: '⏭️ Gemini Next'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1-5' # 08:00 UTC, Monday–Friday
+  workflow_call:
+
+defaults:
+  run:
+    shell: 'bash'
+
+jobs:
+  select:
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 5
+    permissions:
+      contents: 'read'
+      issues: 'read'
+    outputs:
+      issue_number: '${{ steps.pick.outputs.issue_number }}'
+      issue_title: '${{ steps.pick.outputs.issue_title }}'
+    steps:
+      - name: 'Pick highest-priority ready issue'
+        id: 'pick'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        with:
+          script: |-
+            const priorityWeight = {
+              'priority: critical': 0,
+              'priority: high':     1,
+              'priority: medium':   2,
+              'priority: low':      3,
+            };
+
+            // Abort if any issue is already being worked on
+            const wip = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'status: wip',
+              state: 'open',
+              per_page: 1,
+            });
+            if (wip.data.length > 0) {
+              core.info(`Issue #${wip.data[0].number} is already status: wip — skipping.`);
+              return;
+            }
+
+            // Fetch all status: ready issues
+            const ready = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'status: ready',
+              state: 'open',
+              per_page: 100,
+            });
+
+            if (ready.length === 0) {
+              core.info('No status: ready issues found.');
+              return;
+            }
+
+            const score = (issue) => {
+              const names = issue.labels.map(l => l.name);
+              for (const [label, weight] of Object.entries(priorityWeight)) {
+                if (names.includes(label)) return weight;
+              }
+              return 4;
+            };
+
+            ready.sort((a, b) => score(a) - score(b));
+            const chosen = ready[0];
+
+            core.info(`Selected issue #${chosen.number}: "${chosen.title}" (score ${score(chosen)})`);
+            core.setOutput('issue_number', String(chosen.number));
+            core.setOutput('issue_title', chosen.title);
+
+  implement:
+    needs: 'select'
+    if: "needs.select.outputs.issue_number != ''"
+    uses: './.github/workflows/gemini-invoke.yml'
+    secrets: 'inherit'
+    with:
+      trigger: 'implement'
+      issue_number: '${{ needs.select.outputs.issue_number }}'

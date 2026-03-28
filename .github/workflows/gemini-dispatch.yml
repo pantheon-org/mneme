@@ -14,7 +14,6 @@ on:
     types:
       - 'opened'
       - 'reopened'
-      - 'labeled'
   issue_comment:
     types:
       - 'created'
@@ -33,12 +32,10 @@ jobs:
   dispatch:
     # For PRs: only if not from a fork
     # For issues opened/reopened: always
-    # For issues labeled: only when status: ready is applied
     # For comments/reviews: only if user types @gemini-cli and is OWNER/MEMBER/COLLABORATOR
     if: >-
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) ||
       (github.event_name == 'issues' && contains(fromJSON('["opened", "reopened"]'), github.event.action)) ||
-      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'status: ready') ||
       (github.event.sender.type == 'User' &&
       startsWith(github.event.comment.body || github.event.review.body || '', '@gemini-cli') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association))
@@ -83,17 +80,12 @@ jobs:
             core.setOutput('current_labels', labels.join(','));
 
             let trigger = 'invoke';
-            if (context.eventName === 'issues') {
-              if (context.payload.action === 'labeled' && context.payload.label?.name === 'status: ready') {
-                trigger = 'implement';
-              } else {
-                trigger = 'triage';
-              }
-            }
+            if (context.eventName === 'issues') trigger = 'triage';
             if (!body && context.eventName === 'pull_request') trigger = 'review';
             if (command === '/review') trigger = 'review';
             if (command === '/triage') trigger = 'triage';
             if (command === '/assess') trigger = 'assess';
+            if (command === '/next') trigger = 'next';
 
             core.setOutput('command', trigger);
             core.setOutput('request', request);
@@ -134,10 +126,8 @@ jobs:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
       trigger: 'comment'
 
-  implement:
+  next:
     needs: 'dispatch'
-    if: "needs.dispatch.outputs.command == 'implement'"
-    uses: './.github/workflows/gemini-invoke.yml'
+    if: "needs.dispatch.outputs.command == 'next'"
+    uses: './.github/workflows/gemini-next.yml'
     secrets: 'inherit'
-    with:
-      trigger: 'implement'

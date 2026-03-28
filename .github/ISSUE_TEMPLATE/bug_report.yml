@@ -1,0 +1,58 @@
+name: Bug Report
+description: Report unexpected behavior in a vault-core package
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      options:
+        - "@vault-core/types"
+        - "@vault-core/core"
+        - "@vault-core/cli"
+        - "@vault-core/hook-claude-code"
+        - "@vault-core/plugin-opencode"
+        - "unknown / multiple"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? Be specific.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `vault-cli ...`
+        2. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - OS: macOS 14.x
+        - Bun: 1.x.x
+        - vault-core version / commit:

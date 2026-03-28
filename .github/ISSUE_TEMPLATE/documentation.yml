@@ -1,0 +1,32 @@
+name: Documentation
+description: Missing, incorrect, or unclear documentation
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: doc
+    attributes:
+      label: Which document?
+      options:
+        - "docs/architecture.md"
+        - "docs/api.md"
+        - "docs/cli.md"
+        - "docs/configuration.md"
+        - "docs/hooks.md"
+        - "docs/workflows/"
+        - "AGENTS.md / README.md"
+        - "other / new doc needed"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix or content
+      description: Paste corrected text, an outline, or a description of what should be added (optional).

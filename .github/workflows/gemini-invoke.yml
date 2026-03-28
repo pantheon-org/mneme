@@ -47,8 +47,6 @@ jobs:
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
           workflow_name: 'gemini-invoke'
-          github_pr_number: '${{ github.event.pull_request.number }}'
-          github_issue_number: '${{ github.event.issue.number }}'
           settings: |-
             {
               "model": {

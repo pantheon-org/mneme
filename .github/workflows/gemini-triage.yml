@@ -50,7 +50,7 @@ jobs:
 
       - name: 'Run Gemini issue triage'
         id: 'gemini_triage'
-        if: '${{ steps.get_labels.outputs.available_labels != \'\' }}'
+        if: "${{ steps.get_labels.outputs.available_labels != '' }}"
         uses: 'google-github-actions/run-gemini-cli@v0'
         env:
           GITHUB_TOKEN: '' # Do NOT pass auth tokens here — runs on untrusted input
@@ -64,7 +64,6 @@ jobs:
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
           workflow_name: 'gemini-triage'
-          github_issue_number: '${{ github.event.issue.number }}'
           settings: |-
             {
               "model": {
@@ -103,10 +102,10 @@ jobs:
             Example: {"labels": ["bug", "package: core"], "comment": "..."}
 
       - name: 'Apply labels and post comment'
-        if: '${{ steps.gemini_triage.outputs.response != \'\' }}'
+        if: "${{ steps.gemini_triage.outputs.summary != '' }}"
         uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
         env:
-          GEMINI_RESPONSE: '${{ steps.gemini_triage.outputs.response }}'
+          GEMINI_RESPONSE: '${{ steps.gemini_triage.outputs.summary }}'
         with:
           github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |-
@@ -116,7 +115,7 @@ jobs:
               const jsonMatch = raw.match(/\{[\s\S]*\}/);
               parsed = JSON.parse(jsonMatch?.[0] || raw);
             } catch (e) {
-              core.warning(`Could not parse Gemini response as JSON: ${e.message}`);
+              core.warning(`Could not parse Gemini summary as JSON: ${e.message}`);
               return;
             }
 

@@ -94,13 +94,15 @@ When `status: needs-info` is set, the assessment comment lists what is missing. 
 
 ### Stage 4 — Work in progress (`status: wip`)
 
-Triggered by the `issues: labeled` event when `label.name == 'status: ready'`. `gemini-invoke` runs a **full implementation**:
+Triggered by `gemini-next.yml`, which runs on a daily schedule (08:00 UTC Mon–Fri) or on demand via `@gemini-cli /next`. It selects the single highest-priority `status: ready` issue and blocks if anything is already `status: wip`. `gemini-invoke` then runs a **full implementation**:
 
 1. Creates a feature branch (`fix/<issue-number>-<slug>` or `feat/<issue-number>-<slug>`)
 2. Implements the change following all repository conventions (see `AGENTS.md`)
 3. Runs `bun run typecheck` and `bun run test:bdd` before committing
 4. Opens a PR with `Closes #<issue-number>` in the description
 5. Removes `status: ready`, applies `status: wip` on the issue
+
+Priority order: `priority: critical` → `priority: high` → `priority: medium` → `priority: low`
 
 ---
 
@@ -157,9 +159,11 @@ flowchart TD
     E[GitHub Event] --> D[gemini-dispatch.yml]
     D -->|issues opened — applies status:new| T[gemini-triage.yml]
     D -->|issues opened — parallel with triage| A[gemini-assess.yml]
-    D -->|issues labeled: status:ready| I[gemini-invoke.yml — implement]
     D -->|command == review| R[gemini-review.yml]
-    D -->|command == invoke| I2[gemini-invoke.yml — comment]
+    D -->|command == invoke| I[gemini-invoke.yml — comment]
     D -->|command == assess| A
+    D -->|command == next| N[gemini-next.yml]
+    S[schedule / workflow_dispatch] --> N
+    N -->|highest priority status:ready| I2[gemini-invoke.yml — implement]
     PR[PR merged] --> C[gemini-complete.yml]
 ```

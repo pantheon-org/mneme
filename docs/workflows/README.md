@@ -9,10 +9,12 @@ flowchart TD
     E[GitHub Event] --> D[gemini-dispatch.yml]
     D -->|issues opened — applies status:new| T[gemini-triage.yml]
     D -->|issues opened — parallel with triage| A[gemini-assess.yml]
-    D -->|issues labeled: status:ready| I[gemini-invoke.yml — implement]
     D -->|command == review| R[gemini-review.yml]
-    D -->|command == invoke| I2[gemini-invoke.yml — comment]
+    D -->|command == invoke| I[gemini-invoke.yml — comment]
     D -->|command == assess| A
+    D -->|command == next| N[gemini-next.yml]
+    S[schedule / workflow_dispatch] --> N
+    N -->|highest priority status:ready| I2[gemini-invoke.yml — implement]
     PR[PR merged] --> C[gemini-complete.yml]
 ```
 
@@ -24,6 +26,7 @@ flowchart TD
 | `gemini-triage.yml` | [gemini-triage.md](gemini-triage.md) | Labels and comments on new issues |
 | `gemini-assess.yml` | [gemini-assess.md](gemini-assess.md) | Assesses whether an issue is ready to be worked on |
 | `gemini-review.yml` | [gemini-review.md](gemini-review.md) | Reviews PRs against code conventions |
+| `gemini-next.yml` | [gemini-next.md](gemini-next.md) | Priority queue — picks and implements the next ready issue |
 | `gemini-invoke.yml` | [gemini-invoke.md](gemini-invoke.md) | Ad-hoc requests and full issue implementation |
 | `gemini-complete.yml` | [gemini-complete.md](gemini-complete.md) | Closes lifecycle on PR merge |
 

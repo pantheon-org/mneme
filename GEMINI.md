@@ -65,6 +65,7 @@ bun run test:bdd
 ## Labels used in this repo
 
 When triaging issues, prefer these label categories:
+
 - `bug` / `enhancement` / `documentation` / `question`
 - `package: types` / `package: core` / `package: cli` / `package: hook-claude-code` / `package: plugin-opencode`
 - `priority: high` / `priority: medium` / `priority: low`

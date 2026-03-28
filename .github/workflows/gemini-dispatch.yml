@@ -62,7 +62,7 @@ jobs:
 
             let trigger = 'invoke';
             if (!body && context.eventName === 'pull_request') trigger = 'review';
-            if (!body && context.eventName === 'issues') trigger = 'triage';
+            if (context.eventName === 'issues') trigger = 'triage';
             if (command === '/review') trigger = 'review';
             if (command === '/triage') trigger = 'triage';
 

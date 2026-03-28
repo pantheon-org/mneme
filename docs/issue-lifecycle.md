@@ -12,7 +12,7 @@ stateDiagram-v2
     New --> Triaged : gemini-triage applies\ntype + domain labels\nremoves status:new
     Triaged --> Ready : gemini-assess\nstatus:ready
     Triaged --> NeedsInfo : gemini-assess\nstatus:needs-info
-    NeedsInfo --> Ready : human clarifies\n@gemini-cli /assess
+    NeedsInfo --> Ready : human clarifies\n"@gemini-cli" /assess
     Ready --> WIP : gemini-invoke fires\ncreates branch + PR\nstatus:wip replaces status:ready
     WIP --> Completed : PR merged\nstatus:wip removed\nstatus:completed applied\nissue closed
     Completed --> [*]
@@ -41,22 +41,23 @@ Parallel triggers: `gemini-triage` + `gemini-assess`.
 |---|---|
 | `bug` | Something is broken or behaves incorrectly |
 | `enhancement` | New feature or improvement to existing behaviour |
+| `chore` | Maintenance, tooling, configuration — no functional change |
 | `documentation` | Documentation addition or correction |
 | `question` | Clarification request, no code change expected |
 | `good first issue` | Well-scoped, suitable for new contributors |
 
 #### Domain labels — one or more
 
-> Domain taxonomy is under investigation. The list below is a working proposal.
+Validated against the existing issue backlog (9 issues). Existing flat labels (`reliability`, `data-integrity`, `durability`, `governance`, `performance`) are migrated to the `domain:` namespace for consistency with `package:`, `priority:`, and `status:` prefixes. `durability` is merged into `domain: reliability`.
 
-| Label | Scope |
-|---|---|
-| `domain: data-integrity` | Atomic writes, vault consistency, human-edit immunity |
-| `domain: reliability` | Queue durability, crash recovery, graceful degradation |
-| `domain: governance` | Consolidation, conflict resolution, approval flows |
-| `domain: performance` | Latency, token budgets, embedding throughput |
-| `domain: security` | Auth, prompt injection, secret handling |
-| `domain: dx` | CLI usability, hook ergonomics, developer experience |
+| Label | Scope | Validated by |
+|---|---|---|
+| `domain: data-integrity` | Atomic writes, vault consistency, human-edit immunity | #1, #2, #4, #7 |
+| `domain: reliability` | Queue durability, crash recovery, graceful degradation | #1, #4, #6, #7, #8 |
+| `domain: governance` | Consolidation, conflict resolution, approval flows | #9 |
+| `domain: performance` | Latency, token budgets, embedding throughput | #5 |
+| `domain: security` | Auth, prompt injection, secret handling | — |
+| `domain: dx` | CLI usability, hook ergonomics, developer experience | — |
 
 #### Package labels — one or more (existing)
 
@@ -128,12 +129,13 @@ Domain labels are marked **proposed** pending taxonomy confirmation.
 | `priority: high` | `#b60205` | existing |
 | `priority: medium` | `#fbca04` | existing |
 | `priority: low` | `#0e8a16` | existing |
-| `domain: data-integrity` | `#c5def5` | **proposed** |
-| `domain: reliability` | `#c5def5` | **proposed** |
-| `domain: governance` | `#c5def5` | **proposed** |
-| `domain: performance` | `#c5def5` | **proposed** |
-| `domain: security` | `#e11d48` | **proposed** |
-| `domain: dx` | `#c5def5` | **proposed** |
+| `chore` | `#ededed` | **new** |
+| `domain: data-integrity` | `#c5def5` | **new** (replaces `data-integrity`) |
+| `domain: reliability` | `#c5def5` | **new** (replaces `reliability` + `durability`) |
+| `domain: governance` | `#c5def5` | **new** (replaces `governance`) |
+| `domain: performance` | `#c5def5` | **new** (replaces `performance`) |
+| `domain: security` | `#e11d48` | **new** |
+| `domain: dx` | `#c5def5` | **new** |
 
 ---
 
@@ -156,13 +158,11 @@ flowchart TD
     D -->|issues labeled: status:ready| I[gemini-invoke.yml]
     D -->|PR merged| C[gemini-complete.yml]
     D -->|command == review| R[gemini-review.yml]
-    D -->|@gemini-cli no command| I
+    D -->|"@gemini-cli" no command| I
 ```
 
 ---
 
 ## Open questions
 
-- **Domain taxonomy** — the six proposed domains need validation against the actual issue backlog before the labels are created. Consider running a pass over existing issues to see if the set is complete and non-overlapping.
 - **Re-triage** — should `@gemini-cli /triage` be able to reset labels and status if an issue scope changes significantly after initial triage?
-- **Label bootstrap** — should a one-off script or workflow create all new labels on first run, or are they created manually?

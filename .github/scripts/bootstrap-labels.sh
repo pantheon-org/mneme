@@ -54,6 +54,10 @@ label "status: wip"        "6f42c1" "Work in progress — a PR has been opened"
 label "status: completed"  "0e8a16" "Work done, issue closed"
 
 echo ""
+echo "==> Priority labels (new)"
+label "priority: critical" "b60205" "Must be fixed immediately — production impact or data loss"
+
+echo ""
 echo "==> Type labels (new)"
 label "chore" "ededed" "Maintenance, tooling, configuration — no functional change"
 

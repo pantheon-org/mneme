@@ -105,7 +105,7 @@ jobs:
                - One or more domain labels: domain: data-integrity, domain: reliability,
                  domain: governance, domain: performance, domain: security, domain: dx
                - One or more package labels: package: types/core/cli/hook-claude-code/plugin-opencode
-               - Exactly one priority label: priority: high/medium/low
+               - Exactly one priority label: priority: critical/high/medium/low
                - A status label, subject to these rules:
                    * If current labels include "status: wip" or "status: completed" — do NOT
                      include any status label in your output (those states are owned by automation)

@@ -65,7 +65,7 @@ Validated against the existing issue backlog (9 issues). Existing flat labels (`
 
 #### Priority labels — exactly one (existing)
 
-`priority: high` · `priority: medium` · `priority: low`
+`priority: critical` · `priority: high` · `priority: medium` · `priority: low`
 
 ---
 
@@ -136,7 +136,8 @@ Domain labels are marked **proposed** pending taxonomy confirmation.
 | `package: cli` | `#bfd4f2` | existing |
 | `package: hook-claude-code` | `#bfd4f2` | existing |
 | `package: plugin-opencode` | `#bfd4f2` | existing |
-| `priority: high` | `#b60205` | existing |
+| `priority: critical` | `#b60205` | **new** |
+| `priority: high` | `#e11d48` | existing |
 | `priority: medium` | `#fbca04` | existing |
 | `priority: low` | `#0e8a16` | existing |
 | `chore` | `#ededed` | **new** |

@@ -8,7 +8,7 @@ A label-driven issue lifecycle that ties GitHub labels to automated workflow tri
 
 ```mermaid
 stateDiagram-v2
-    [*] --> New : issue opened\nstatus:new auto-applied
+    [*] --> New : issue opened\nstatus(new) auto-applied
     New --> Triaged : gemini-triage applies\ntype + domain labels\nremoves status:new
     Triaged --> Ready : gemini-assess\nstatus:ready
     Triaged --> NeedsInfo : gemini-assess\nstatus:needs-info
@@ -79,6 +79,16 @@ Validated against the existing issue backlog (9 issues). Existing flat labels (`
 | `status: needs-info` | Requires human clarification before work can begin |
 
 When `status: needs-info` is set, the assessment comment lists what is missing. Once the author clarifies, a human re-triggers with `@gemini-cli /assess`. When `status: ready` is applied the lifecycle advances automatically.
+
+`@gemini-cli /triage` can be used at any point to correct type, domain, package, or priority labels. It may also change status, subject to the following rules:
+
+| Current status | Re-triage may update status? |
+|---|---|
+| `status: new` | Yes |
+| `status: needs-info` | Yes |
+| `status: ready` | Yes — can roll back to `needs-info` if scope changes |
+| `status: wip` | **No** — a PR is open; status is owned by automation |
+| `status: completed` | **No** — issue is closed |
 
 ---
 
@@ -163,6 +173,7 @@ flowchart TD
 
 ---
 
-## Open questions
+## Implementation notes
 
-- **Re-triage** — should `@gemini-cli /triage` be able to reset labels and status if an issue scope changes significantly after initial triage?
+- The `gemini-triage` prompt must be updated to accept an optional current-status input and respect the re-triage status rules above
+- The `gemini-dispatch` routing for `@gemini-cli /triage` must pass the current issue labels (including status) as context so Gemini can decide whether to touch the status label

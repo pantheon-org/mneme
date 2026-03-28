@@ -1,0 +1,84 @@
+name: '🔎 Gemini Review'
+
+on:
+  workflow_call:
+    inputs:
+      additional_context:
+        type: 'string'
+        description: 'Any additional context from the request'
+        required: false
+
+concurrency:
+  group: '${{ github.workflow }}-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+jobs:
+  review:
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 7
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      issues: 'write'
+      pull-requests: 'write'
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Run Gemini PR review'
+        id: 'gemini_review'
+        uses: 'google-github-actions/run-gemini-cli@v0'
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
+          ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body }}'
+          PULL_REQUEST_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
+          REPOSITORY: '${{ github.repository }}'
+          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
+        with:
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_model: '${{ vars.GEMINI_MODEL }}'
+          gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
+          gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          workflow_name: 'gemini-review'
+          github_pr_number: '${{ github.event.pull_request.number }}'
+          settings: |-
+            {
+              "model": {
+                "maxSessionTurns": 30
+              },
+              "telemetry": {
+                "enabled": true,
+                "target": "local",
+                "outfile": ".gemini/telemetry.log"
+              }
+            }
+          prompt: |-
+            You are reviewing a pull request for the mneme repository (vault-core), a Bun monorepo
+            implementing persistent memory for AI coding agents.
+
+            Key conventions to enforce:
+            - TypeScript strict mode (strict, exactOptionalPropertyTypes, noUncheckedIndexedAccess)
+            - Bun runtime only: use bun:sqlite, bun:test — never better-sqlite3, Jest, or Vitest
+            - NodeNext module resolution: .js extensions required in imports
+            - Arrow functions preferred over function declarations
+            - No comments in code unless logic is non-obvious
+            - No unused imports
+            - Max 110 non-blank lines per file
+            - One exported function/class per module
+            - import type for type-only imports
+
+            Run: gh pr diff ${{ github.event.pull_request.number }} to see the diff.
+
+            Then post a review comment covering:
+            1. Summary of changes (2–3 sentences)
+            2. Any violations of the conventions above
+            3. Correctness concerns (memory model, atomic writes, non-blocking capture)
+            4. Test coverage gaps
+            5. Overall verdict: Approve / Request Changes / Comment
+
+            Use `gh pr review ${{ github.event.pull_request.number }} --comment --body "..."` to post your review.

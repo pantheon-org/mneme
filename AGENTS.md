@@ -168,6 +168,15 @@ All documentation lives in `docs/`. Update relevant docs when making changes to:
 - Public API → `docs/api.md`
 - Architecture → `docs/architecture.md`
 
+## GitHub labels
+
+When triaging issues, prefer these label categories:
+
+- `bug` / `enhancement` / `documentation` / `question`
+- `package: types` / `package: core` / `package: cli` / `package: hook-claude-code` / `package: plugin-opencode`
+- `priority: high` / `priority: medium` / `priority: low`
+- `good first issue` / `help wanted`
+
 ## Agent Rules <!-- tessl-managed -->
 
 @.tessl/RULES.md follow the [instructions](.tessl/RULES.md)

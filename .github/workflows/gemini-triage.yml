@@ -1,0 +1,139 @@
+name: '🏷️ Gemini Triage'
+
+on:
+  workflow_call:
+    inputs:
+      additional_context:
+        type: 'string'
+        description: 'Any additional context from the request'
+        required: false
+
+concurrency:
+  group: '${{ github.workflow }}-triage-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+jobs:
+  triage:
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 7
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      issues: 'write'
+      pull-requests: 'read'
+    steps:
+      - name: 'Get repository labels'
+        id: 'get_labels'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        with:
+          script: |-
+            const labels = [];
+            for await (const response of github.paginate.iterator(github.rest.issues.listLabelsForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            })) {
+              labels.push(...response.data);
+            }
+
+            if (!labels || labels.length === 0) {
+              core.setFailed('There are no issue labels in this repository.')
+            }
+
+            const labelNames = labels.map(label => label.name).sort();
+            core.setOutput('available_labels', labelNames.join(','));
+            core.info(`Found ${labelNames.length} labels: ${labelNames.join(', ')}`);
+
+      - name: 'Run Gemini issue triage'
+        id: 'gemini_triage'
+        if: '${{ steps.get_labels.outputs.available_labels != \'\' }}'
+        uses: 'google-github-actions/run-gemini-cli@v0'
+        env:
+          GITHUB_TOKEN: '' # Do NOT pass auth tokens here — runs on untrusted input
+          ISSUE_TITLE: '${{ github.event.issue.title }}'
+          ISSUE_BODY: '${{ github.event.issue.body }}'
+          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
+          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
+        with:
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_model: '${{ vars.GEMINI_MODEL }}'
+          gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
+          gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          workflow_name: 'gemini-triage'
+          github_issue_number: '${{ github.event.issue.number }}'
+          settings: |-
+            {
+              "model": {
+                "maxSessionTurns": 25
+              },
+              "telemetry": {
+                "enabled": true,
+                "target": "local",
+                "outfile": ".gemini/telemetry.log"
+              },
+              "tools": {
+                "core": [
+                  "run_shell_command(echo)"
+                ]
+              }
+            }
+          prompt: |-
+            You are triaging a GitHub issue for the mneme repository (vault-core), a Bun monorepo
+            implementing persistent memory for AI coding agents.
+
+            Issue title: ${{ github.event.issue.title }}
+            Issue body: ${{ github.event.issue.body }}
+            Available labels: ${{ steps.get_labels.outputs.available_labels }}
+            Additional context: ${{ inputs.additional_context }}
+
+            Your task:
+            1. Analyse the issue content carefully.
+            2. Select the most appropriate labels from the available list above. Apply 1–3 labels max.
+            3. Add a brief triage comment (2–4 sentences) that:
+               - Acknowledges the issue
+               - States which package(s) are affected (types/core/cli/hook-claude-code/plugin-opencode)
+               - Indicates the priority/nature (bug, enhancement, docs, question, etc.)
+               - Mentions next steps if obvious
+
+            Output ONLY: a JSON object with keys "labels" (array of label name strings) and "comment" (string).
+            Example: {"labels": ["bug", "package: core"], "comment": "..."}
+
+      - name: 'Apply labels and post comment'
+        if: '${{ steps.gemini_triage.outputs.response != \'\' }}'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        env:
+          GEMINI_RESPONSE: '${{ steps.gemini_triage.outputs.response }}'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |-
+            let parsed;
+            try {
+              const raw = process.env.GEMINI_RESPONSE.trim();
+              const jsonMatch = raw.match(/\{[\s\S]*\}/);
+              parsed = JSON.parse(jsonMatch?.[0] || raw);
+            } catch (e) {
+              core.warning(`Could not parse Gemini response as JSON: ${e.message}`);
+              return;
+            }
+
+            if (parsed.labels?.length) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: parsed.labels,
+              });
+            }
+
+            if (parsed.comment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `🤖 **Gemini Triage**\n\n${parsed.comment}`,
+              });
+            }

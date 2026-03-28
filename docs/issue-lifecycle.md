@@ -8,13 +8,13 @@ A label-driven issue lifecycle that ties GitHub labels to automated workflow tri
 
 ```mermaid
 stateDiagram-v2
-    [*] --> New : issue opened\nstatus(new) auto-applied
-    New --> Triaged : gemini-triage applies\ntype + domain labels\nremoves status:new
-    Triaged --> Ready : gemini-assess\nstatus:ready
-    Triaged --> NeedsInfo : gemini-assess\nstatus:needs-info
-    NeedsInfo --> Ready : human clarifies\n"@gemini-cli" /assess
-    Ready --> WIP : gemini-invoke fires\ncreates branch + PR\nstatus:wip replaces status:ready
-    WIP --> Completed : PR merged\nstatus:wip removed\nstatus:completed applied\nissue closed
+    [*] --> New : issue opened
+    New --> Triaged : gemini-triage labels type + domain
+    Triaged --> Ready : gemini-assess — status ready
+    Triaged --> NeedsInfo : gemini-assess — status needs-info
+    NeedsInfo --> Ready : human clarifies via @gemini-cli /assess
+    Ready --> WIP : gemini-invoke creates branch + PR
+    WIP --> Completed : PR merged
     Completed --> [*]
 ```
 

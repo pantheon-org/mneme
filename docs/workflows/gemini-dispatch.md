@@ -26,7 +26,7 @@ The `extract_command` step parses the event body using the pattern `@gemini-cli 
 
 | Condition | Routes to |
 |---|---|
-| `issues` event (open/reopen) | `triage` |
+| `issues` event (open/reopen) | `triage` + `assess` (parallel) |
 | `pull_request` event (no `@gemini-cli` body) | `review` |
 | `@gemini-cli /review ...` | `review` |
 | `@gemini-cli /triage ...` | `triage` |

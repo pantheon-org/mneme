@@ -79,6 +79,12 @@ jobs:
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
 
+  assess:
+    needs: 'dispatch'
+    if: "github.event_name == 'issues'"
+    uses: './.github/workflows/gemini-assess.yml'
+    secrets: 'inherit'
+
   review:
     needs: 'dispatch'
     if: "needs.dispatch.outputs.command == 'review'"

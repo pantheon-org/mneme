@@ -1,0 +1,32 @@
+name: Question
+description: Ask a question about usage, design, or behavior
+labels: ["question"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Related package (if applicable)
+      options:
+        - "@vault-core/types"
+        - "@vault-core/core"
+        - "@vault-core/cli"
+        - "@vault-core/hook-claude-code"
+        - "@vault-core/plugin-opencode"
+        - "general / unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What were you trying to do when this question came up?
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true

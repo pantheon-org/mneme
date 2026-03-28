@@ -1,7 +1,0 @@
-{
-  "name": "tessl/npm-cucumber--cucumber",
-  "version": "12.2.0",
-  "docs": "docs/index.md",
-  "describes": "pkg:npm/@cucumber/cucumber@12.2.0",
-  "summary": "The official JavaScript implementation of Cucumber, a behavior-driven development testing framework for writing tests in plain language."
-}

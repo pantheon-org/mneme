@@ -1,5 +1,5 @@
 {
-  "name": "my-project",
+  "name": "pantheon-ai/mneme",
   "mode": "vendored",
   "dependencies": {
     "pantheon-ai/implementation-planner": {
@@ -24,28 +24,21 @@
       "version": "a6f0f457c4e41cbb0ad329b691d28e255a829210",
       "source": "https://github.com/wshobson/agents",
       "include": {
-        "skills": [
-          "architecture-decision-records"
-        ]
+        "skills": ["architecture-decision-records"]
       }
     },
     "softaworks/agent-toolkit": {
       "version": "3027f20f3181758385a1bb8c022d4041dfb4de84",
       "source": "https://github.com/softaworks/agent-toolkit",
       "include": {
-        "skills": [
-          "mermaid-diagrams"
-        ]
+        "skills": ["mermaid-diagrams"]
       }
     },
     "fernandezbaptiste/claude-code-skills": {
       "version": "4f0eae8221589f1757e325e679860e7b44595641",
       "source": "https://github.com/fernandezbaptiste/claude-code-skills",
       "include": {
-        "skills": [
-          "deep-research",
-          "docs-cleaner"
-        ]
+        "skills": ["deep-research", "docs-cleaner"]
       }
     },
     "tessl/cli-setup": {
@@ -62,6 +55,12 @@
     },
     "tessl-labs/tessl-skill-eval-scenarios": {
       "version": "0.1.0"
+    },
+    "tessl-labs/tile-creator": {
+      "version": "1.1.0"
+    },
+    "tessl-labs/skill-review-optimizer": {
+      "version": "0.1.1"
     }
   }
 }

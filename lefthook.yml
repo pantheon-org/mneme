@@ -13,6 +13,11 @@ pre-commit:
       stage_fixed: true
       fail_text: "markdownlint found issues that could not be auto-fixed"
 
+    - name: actionlint
+      glob: ".github/workflows/*.yml"
+      run: mise exec actionlint -- actionlint {staged_files}
+      fail_text: "actionlint found issues in GitHub Actions workflows"
+
 pre-push:
   parallel: true
   jobs:

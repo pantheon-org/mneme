@@ -5,6 +5,7 @@
 .gemini/
 .github/skills/
 .tessl/
+gha-creds-*.json
 vault-core/node_modules/
 vault-core/dist/
 vault-core/packages/*/dist/

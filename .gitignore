@@ -1,3 +1,10 @@
+.agents/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.github/skills/
+.tessl/
 vault-core/node_modules/
 vault-core/dist/
 vault-core/packages/*/dist/

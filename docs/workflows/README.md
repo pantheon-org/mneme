@@ -7,8 +7,8 @@ This repository uses four workflows that together implement a Gemini CLI–power
 ```mermaid
 flowchart TD
     E[GitHub Event] --> D[gemini-dispatch.yml]
-    D -->|command == triage\nissues opened/reopened| T[gemini-triage.yml]
-    D -->|issues opened/reopened\nruns in parallel with triage| A[gemini-assess.yml]
+    D -->|command == triage > issues opened/reopened| T[gemini-triage.yml]
+    D -->|issues opened/reopened > runs in parallel with triage| A[gemini-assess.yml]
     D -->|command == review| R[gemini-review.yml]
     D -->|command == invoke| I[gemini-invoke.yml]
 ```

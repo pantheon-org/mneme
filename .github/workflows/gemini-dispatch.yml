@@ -14,6 +14,7 @@ on:
     types:
       - 'opened'
       - 'reopened'
+      - 'labeled'
   issue_comment:
     types:
       - 'created'
@@ -31,21 +32,40 @@ permissions:
 jobs:
   dispatch:
     # For PRs: only if not from a fork
-    # For issues: only on open/reopen
-    # For comments: only if user types @gemini-cli and is OWNER/MEMBER/COLLABORATOR
+    # For issues opened/reopened: always
+    # For issues labeled: only when status: ready is applied
+    # For comments/reviews: only if user types @gemini-cli and is OWNER/MEMBER/COLLABORATOR
     if: >-
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) ||
       (github.event_name == 'issues' && contains(fromJSON('["opened", "reopened"]'), github.event.action)) ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'status: ready') ||
       (github.event.sender.type == 'User' &&
-      startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@gemini-cli') &&
+      startsWith(github.event.comment.body || github.event.review.body || '', '@gemini-cli') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association))
     runs-on: 'ubuntu-latest'
     outputs:
       command: '${{ steps.extract_command.outputs.command }}'
       request: '${{ steps.extract_command.outputs.request }}'
       additional_context: '${{ steps.extract_command.outputs.additional_context }}'
+      current_labels: '${{ steps.extract_command.outputs.current_labels }}'
       issue_number: '${{ github.event.pull_request.number || github.event.issue.number }}'
     steps:
+      - name: 'Apply status: new label'
+        if: "github.event_name == 'issues' && github.event.action == 'opened'"
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        with:
+          script: |-
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['status: new'],
+              });
+            } catch (e) {
+              core.warning(`Could not apply status: new: ${e.message}. Ensure the label exists in the repository.`);
+            }
+
       - name: 'Extract command'
         id: 'extract_command'
         uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
@@ -53,18 +73,27 @@ jobs:
           script: |-
             const body = context.payload.comment?.body
               || context.payload.review?.body
-              || context.payload.issue?.body
               || '';
 
             const match = body.match(/^@gemini-cli\s*(\/\S+)?\s*(.*)?$/s);
             const command = match?.[1] || '';
             const request = match?.[2]?.trim() || '';
 
+            const labels = context.payload.issue?.labels?.map(l => l.name) || [];
+            core.setOutput('current_labels', labels.join(','));
+
             let trigger = 'invoke';
+            if (context.eventName === 'issues') {
+              if (context.payload.action === 'labeled' && context.payload.label?.name === 'status: ready') {
+                trigger = 'implement';
+              } else {
+                trigger = 'triage';
+              }
+            }
             if (!body && context.eventName === 'pull_request') trigger = 'review';
-            if (context.eventName === 'issues') trigger = 'triage';
             if (command === '/review') trigger = 'review';
             if (command === '/triage') trigger = 'triage';
+            if (command === '/assess') trigger = 'assess';
 
             core.setOutput('command', trigger);
             core.setOutput('request', request);
@@ -78,10 +107,13 @@ jobs:
     secrets: 'inherit'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
+      current_labels: '${{ needs.dispatch.outputs.current_labels }}'
 
   assess:
     needs: 'dispatch'
-    if: "github.event_name == 'issues'"
+    if: >-
+      (github.event_name == 'issues' && contains(fromJSON('["opened", "reopened"]'), github.event.action)) ||
+      needs.dispatch.outputs.command == 'assess'
     uses: './.github/workflows/gemini-assess.yml'
     secrets: 'inherit'
 
@@ -100,3 +132,12 @@ jobs:
     secrets: 'inherit'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
+      trigger: 'comment'
+
+  implement:
+    needs: 'dispatch'
+    if: "needs.dispatch.outputs.command == 'implement'"
+    uses: './.github/workflows/gemini-invoke.yml'
+    secrets: 'inherit'
+    with:
+      trigger: 'implement'

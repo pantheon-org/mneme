@@ -149,31 +149,16 @@ Domain labels are marked **proposed** pending taxonomy confirmation.
 
 ---
 
-## Workflow changes required
-
-| Trigger | Event | New behaviour |
-|---|---|---|
-| Issue opened | `issues: opened` | Auto-apply `status: new` before triage + assess |
-| `status: ready` applied | `issues: labeled` | Fire `gemini-invoke` (full implementation), swap to `status: wip` |
-| PR merged | `pull_request: closed` + `merged == true` | Remove `status: wip` / `status: ready`, apply `status: completed` |
-
-Updated dispatch routing:
+## Workflow routing
 
 ```mermaid
 flowchart TD
     E[GitHub Event] --> D[gemini-dispatch.yml]
-    D -->|issues opened/reopened| N[apply status:new]
-    N --> T[gemini-triage.yml]
-    N --> A[gemini-assess.yml]
-    D -->|issues labeled: status:ready| I[gemini-invoke.yml]
-    D -->|PR merged| C[gemini-complete.yml]
+    D -->|issues opened — applies status:new| T[gemini-triage.yml]
+    D -->|issues opened — parallel with triage| A[gemini-assess.yml]
+    D -->|issues labeled: status:ready| I[gemini-invoke.yml — implement]
     D -->|command == review| R[gemini-review.yml]
-    D -->|"@gemini-cli" no command| I
+    D -->|command == invoke| I2[gemini-invoke.yml — comment]
+    D -->|command == assess| A
+    PR[PR merged] --> C[gemini-complete.yml]
 ```
-
----
-
-## Implementation notes
-
-- The `gemini-triage` prompt must be updated to accept an optional current-status input and respect the re-triage status rules above
-- The `gemini-dispatch` routing for `@gemini-cli /triage` must pass the current issue labels (including status) as context so Gemini can decide whether to touch the status label

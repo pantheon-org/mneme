@@ -7,6 +7,10 @@ on:
         type: 'string'
         description: 'Any additional context from the request'
         required: false
+      current_labels:
+        type: 'string'
+        description: 'Comma-separated list of labels currently on the issue'
+        required: false
 
 concurrency:
   group: '${{ github.workflow }}-triage-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
@@ -58,6 +62,7 @@ jobs:
           ISSUE_BODY: '${{ github.event.issue.body }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
+          CURRENT_LABELS: '${{ inputs.current_labels }}'
         with:
           gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
           gemini_model: '${{ vars.GEMINI_MODEL }}'
@@ -90,25 +95,36 @@ jobs:
             Issue title: $ISSUE_TITLE
             Issue body: $ISSUE_BODY
             Available labels: $AVAILABLE_LABELS
+            Current labels on this issue: $CURRENT_LABELS
             Additional context: $ADDITIONAL_CONTEXT
 
             Your task:
             1. Analyse the issue content carefully.
-            2. Select the most appropriate labels from the available list above. Apply 1–3 labels max.
-            3. Add a brief triage comment (2–4 sentences) that:
+            2. Select the most appropriate labels from the available list. Apply 1–3 labels max.
+               - Exactly one type label: bug, enhancement, chore, documentation, or question
+               - One or more domain labels: domain: data-integrity, domain: reliability,
+                 domain: governance, domain: performance, domain: security, domain: dx
+               - One or more package labels: package: types/core/cli/hook-claude-code/plugin-opencode
+               - Exactly one priority label: priority: high/medium/low
+               - A status label, subject to these rules:
+                   * If current labels include "status: wip" or "status: completed" — do NOT
+                     include any status label in your output (those states are owned by automation)
+                   * Otherwise you may include "status: needs-info" or "status: ready" if appropriate
+            3. Write a brief triage comment (2–4 sentences) that:
                - Acknowledges the issue
-               - States which package(s) are affected (types/core/cli/hook-claude-code/plugin-opencode)
-               - Indicates the priority/nature (bug, enhancement, docs, question, etc.)
+               - States which package(s) are affected
+               - Indicates the priority/nature
                - Mentions next steps if obvious
 
             Output ONLY: a JSON object with keys "labels" (array of label name strings) and "comment" (string).
-            Example: {"labels": ["bug", "package: core"], "comment": "..."}
+            Example: {"labels": ["bug", "package: core", "domain: reliability", "priority: high"], "comment": "..."}
 
       - name: 'Apply labels and post comment'
         if: "${{ steps.gemini_triage.outputs.summary != '' }}"
         uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
         env:
           GEMINI_RESPONSE: '${{ steps.gemini_triage.outputs.summary }}'
+          CURRENT_LABELS: '${{ inputs.current_labels }}'
         with:
           github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |-
@@ -122,12 +138,35 @@ jobs:
               return;
             }
 
-            if (parsed.labels?.length) {
+            const currentLabels = process.env.CURRENT_LABELS?.split(',').filter(Boolean) ?? [];
+            const blockedStatuses = ['status: wip', 'status: completed'];
+            const statusBlocked = currentLabels.some(l => blockedStatuses.includes(l));
+
+            // Remove status: new — always safe to do on first triage
+            if (currentLabels.includes('status: new')) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: 'status: new',
+                });
+              } catch (e) {
+                core.info(`status: new not present or already removed: ${e.message}`);
+              }
+            }
+
+            // Filter out status labels if the issue is wip or completed
+            const labelsToApply = statusBlocked
+              ? (parsed.labels ?? []).filter(l => !l.startsWith('status:'))
+              : (parsed.labels ?? []);
+
+            if (labelsToApply.length) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                labels: parsed.labels,
+                labels: labelsToApply,
               });
             }
 

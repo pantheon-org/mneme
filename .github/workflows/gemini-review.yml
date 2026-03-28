@@ -31,6 +31,7 @@ jobs:
 
       - name: 'Run Gemini PR review'
         id: 'gemini_review'
+        continue-on-error: true
         uses: 'google-github-actions/run-gemini-cli@v0'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'

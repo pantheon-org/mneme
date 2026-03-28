@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: 'Run Gemini readiness assessment'
         id: 'gemini_assess'
+        continue-on-error: true
         uses: 'google-github-actions/run-gemini-cli@v0'
         env:
           GITHUB_TOKEN: '' # Do NOT pass auth tokens here — runs on untrusted input

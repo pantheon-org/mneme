@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: 'ci-${{ github.event.pull_request.number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: vault-core
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.11'
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Biome check
+        run: bun run lint
+
+      - name: Markdown lint
+        run: bun run lint:md
+        working-directory: ${{ github.workspace }}
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.11'
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build (required for cross-package types)
+        run: bun run build
+
+      - name: Typecheck
+        run: bun run typecheck
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.11'
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run unit tests
+        run: bun test --coverage

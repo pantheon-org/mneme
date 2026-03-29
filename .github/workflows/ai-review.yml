@@ -127,6 +127,28 @@ jobs:
             4. Test coverage gaps
             5. Overall verdict: Approve / Request Changes / Comment
 
+      - name: 'Write job summary'
+        if: always()
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
+        env:
+          GEMINI_OUTCOME: '${{ steps.gemini_review.outcome }}'
+          FALLBACK_OUTCOME: '${{ steps.ai_fallback.outcome }}'
+          FALLBACK_BACKEND: '${{ steps.ai_fallback.outputs.backend_used }}'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |-
+            const geminiOk = process.env.GEMINI_OUTCOME === 'success';
+            const fallbackOk = process.env.FALLBACK_OUTCOME === 'success';
+            const backend = geminiOk ? 'gemini' : (process.env.FALLBACK_BACKEND || (fallbackOk ? 'fallback' : 'none'));
+            const outcome = geminiOk ? '✅ success' : fallbackOk ? '✅ fallback success' : '❌ all failed';
+            core.info(`LLM backend=${backend} outcome=${outcome}`);
+            await core.summary.addHeading('AI Review', 3)
+              .addTable([
+                [{data:'Backend',header:true},{data:'Outcome',header:true}],
+                [backend, outcome],
+              ])
+              .write();
+
       - name: 'Post fallback review'
         if: "steps.gemini_review.outcome == 'failure' && steps.ai_fallback.outputs.summary != ''"
         uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8

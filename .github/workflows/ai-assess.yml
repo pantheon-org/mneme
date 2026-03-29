@@ -115,13 +115,19 @@ jobs:
         with:
           github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |-
+            const backend = process.env.AI_BACKEND || 'gemini';
+            const raw = process.env.AI_RESPONSE?.trim() ?? '';
+            core.info(`LLM backend=${backend} response_chars=${raw.length}`);
+
             let parsed;
             try {
-              const raw = process.env.AI_RESPONSE.trim();
               const jsonMatch = raw.match(/\{[\s\S]*\}/);
               parsed = JSON.parse(jsonMatch?.[0] || raw);
             } catch (e) {
-              core.warning(`Could not parse Gemini assessment as JSON: ${e.message}`);
+              core.warning(`Could not parse ${backend} assessment as JSON: ${e.message}\nRaw (first 500 chars): ${raw.slice(0, 500)}`);
+              await core.summary.addHeading('AI Assess', 3)
+                .addTable([[{data:'Backend',header:true},{data:'Parse',header:true}],[backend,`❌ ${e.message.slice(0,80)}`]])
+                .write();
               return;
             }
 
@@ -134,6 +140,7 @@ jobs:
                   issue_number: context.issue.number,
                   labels: [parsed.label],
                 });
+                core.info(`Applied label: ${parsed.label}`);
               } catch (e) {
                 core.warning(`Could not apply label "${parsed.label}": ${e.message}. Ensure the label exists in the repository.`);
               }
@@ -146,6 +153,13 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: `🤖 **Assessment** (${process.env.AI_BACKEND || 'gemini'}) — ${emoji} ${heading}\n\n${parsed.reason}`,
+                body: `🤖 **Assessment** (${backend}) — ${emoji} ${heading}\n\n${parsed.reason}`,
               });
             }
+
+            await core.summary.addHeading('AI Assess', 3)
+              .addTable([
+                [{data:'Backend',header:true},{data:'Response chars',header:true},{data:'Ready',header:true},{data:'Label',header:true}],
+                [backend, String(raw.length), parsed.ready ? '✅' : '⏳', parsed.label ?? 'n/a'],
+              ])
+              .write();

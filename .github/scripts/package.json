@@ -1,0 +1,12 @@
+{
+  "name": "github-scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@octokit/rest": "^21"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5"
+  }
+}

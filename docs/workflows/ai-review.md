@@ -1,10 +1,10 @@
-# gemini-review.yml
+# ai-review.yml
 
 Reviews pull requests against the repository's code conventions using Gemini CLI.
 
 ## Called by
 
-`gemini-dispatch` when `command == 'review'` (PR opened, or `@gemini-cli /review`).
+`ai-dispatch` when `command == 'review'` (PR opened, or `@gemini-cli /review`).
 
 ## Inputs
 

@@ -1,4 +1,4 @@
-name: '▶️ Gemini Invoke'
+name: '▶️ AI Invoke'
 
 on:
   workflow_call:
@@ -47,6 +47,7 @@ jobs:
         id: 'run_gemini'
         continue-on-error: true
         uses: 'google-github-actions/run-gemini-cli@v0'
+
         env:
           TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
           DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
@@ -63,7 +64,7 @@ jobs:
           gemini_model: '${{ vars.GEMINI_MODEL }}'
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
-          workflow_name: 'gemini-invoke'
+          workflow_name: 'ai-invoke'
           settings: |-
             {
               "model": {
@@ -134,3 +135,20 @@ jobs:
               gh pr comment $ISSUE_NUMBER --body "..."     (for PRs)
 
             Be concise, accurate, and stay within the repo's conventions.
+
+      - name: 'Notify quota exhaustion'
+        if: "steps.run_gemini.outcome == 'failure'"
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
+        env:
+          ISSUE_NUMBER: '${{ inputs.issue_number || github.event.pull_request.number || github.event.issue.number }}'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |-
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            if (!issueNumber) return;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: '⚠️ **AI quota exhausted** — the daily Gemini free-tier limit has been reached. This issue will be retried automatically on the next scheduled run (08:00 UTC, Mon–Fri).',
+            });

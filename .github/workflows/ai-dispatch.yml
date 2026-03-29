@@ -1,4 +1,4 @@
-name: '🔀 Gemini Dispatch'
+name: '🔀 AI Dispatch'
 
 on:
   pull_request_review_comment:
@@ -95,7 +95,7 @@ jobs:
   triage:
     needs: 'dispatch'
     if: "needs.dispatch.outputs.command == 'triage'"
-    uses: './.github/workflows/gemini-triage.yml'
+    uses: './.github/workflows/ai-triage.yml'
     secrets: 'inherit'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
@@ -106,13 +106,13 @@ jobs:
     if: >-
       (github.event_name == 'issues' && contains(fromJSON('["opened", "reopened"]'), github.event.action)) ||
       needs.dispatch.outputs.command == 'assess'
-    uses: './.github/workflows/gemini-assess.yml'
+    uses: './.github/workflows/ai-assess.yml'
     secrets: 'inherit'
 
   review:
     needs: 'dispatch'
     if: "needs.dispatch.outputs.command == 'review'"
-    uses: './.github/workflows/gemini-review.yml'
+    uses: './.github/workflows/ai-review.yml'
     secrets: 'inherit'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
@@ -120,7 +120,7 @@ jobs:
   invoke:
     needs: 'dispatch'
     if: "needs.dispatch.outputs.command == 'invoke'"
-    uses: './.github/workflows/gemini-invoke.yml'
+    uses: './.github/workflows/ai-invoke.yml'
     secrets: 'inherit'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
@@ -129,5 +129,5 @@ jobs:
   next:
     needs: 'dispatch'
     if: "needs.dispatch.outputs.command == 'next'"
-    uses: './.github/workflows/gemini-next.yml'
+    uses: './.github/workflows/ai-next.yml'
     secrets: 'inherit'

@@ -36,12 +36,12 @@ jobs:
       pull-requests: 'write'
     steps:
       - name: 'Checkout Code'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' # v4
         with:
           fetch-depth: 0
 
       - name: 'Setup Bun'
-        uses: 'oven-sh/setup-bun@v2'
+        uses: 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6' # v2
 
       - name: 'Authenticate GitHub CLI'
         run: 'echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token'
@@ -49,7 +49,7 @@ jobs:
       - name: 'Run Gemini CLI'
         id: 'run_gemini'
         continue-on-error: true
-        uses: 'google-github-actions/run-gemini-cli@v0'
+        uses: 'google-github-actions/run-gemini-cli@9dbec29a20fab3f35017a40ad0eb798a257d4d51' # v0
 
         env:
           TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'

@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: 'Get repository labels'
         id: 'get_labels'
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
         with:
           script: |-
             const labels = [];
@@ -122,7 +122,7 @@ jobs:
 
       - name: 'Apply labels and post comment'
         if: "${{ steps.gemini_triage.outputs.summary != '' }}"
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
         env:
           GEMINI_RESPONSE: '${{ steps.gemini_triage.outputs.summary }}'
           CURRENT_LABELS: '${{ inputs.current_labels }}'

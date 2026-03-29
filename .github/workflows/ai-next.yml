@@ -30,22 +30,12 @@ jobs:
       - name: 'Checkout'
         uses: 'actions/checkout@v4'
         with:
-          sparse-checkout: '.github/scripts'
+          sparse-checkout: '.github/actions/select-issue'
           sparse-checkout-cone-mode: false
-
-      - name: 'Setup Bun'
-        uses: 'oven-sh/setup-bun@v2'
-
-      - name: 'Install script dependencies'
-        run: 'bun install --frozen-lockfile'
-        working-directory: '.github/scripts'
 
       - name: 'Pick highest-priority ready issue'
         id: 'pick'
-        run: 'bun run .github/scripts/select-issue.ts'
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-          GITHUB_REPOSITORY: '${{ github.repository }}'
+        uses: './.github/actions/select-issue'
 
   implement:
     needs: 'select'

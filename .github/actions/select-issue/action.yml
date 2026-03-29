@@ -1,0 +1,29 @@
+name: 'Select Issue'
+description: 'Picks the highest-priority ready issue, skipping if one is already in progress'
+
+outputs:
+  issue_number:
+    description: 'The selected issue number, or empty string if none selected'
+    value: '${{ steps.pick.outputs.issue_number }}'
+  issue_title:
+    description: 'The selected issue title, or empty string if none selected'
+    value: '${{ steps.pick.outputs.issue_title }}'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Setup Bun'
+      uses: 'oven-sh/setup-bun@v2'
+
+    - name: 'Install dependencies'
+      shell: 'bash'
+      run: 'bun install --frozen-lockfile'
+      working-directory: '${{ github.action_path }}'
+
+    - name: 'Pick highest-priority ready issue'
+      id: 'pick'
+      shell: 'bash'
+      run: 'bun run ${{ github.action_path }}/select-issue.ts'
+      env:
+        GITHUB_TOKEN: '${{ github.token }}'
+        GITHUB_REPOSITORY: '${{ github.repository }}'

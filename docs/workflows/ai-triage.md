@@ -1,10 +1,10 @@
-# gemini-triage.yml
+# ai-triage.yml
 
 Triages new issues by selecting labels and posting an acknowledgement comment via Gemini CLI.
 
 ## Called by
 
-`gemini-dispatch` when `command == 'triage'` (issues opened/reopened, or `@gemini-cli /triage`).
+`ai-dispatch` when `command == 'triage'` (issues opened/reopened, or `@gemini-cli /triage`).
 
 ## Inputs
 
@@ -34,7 +34,7 @@ Triages new issues by selecting labels and posting an acknowledgement comment vi
 
 3. **`Apply labels and post comment`** — parses the JSON from Gemini's `summary` output, then:
    - Calls `issues.addLabels` with the selected labels
-   - Calls `issues.createComment` with the triage comment prefixed by `🤖 **Gemini Triage**`
+   - Calls `issues.createComment` with the triage comment prefixed by `🤖 **AI Triage**`
 
 ## Gemini prompt instructions
 

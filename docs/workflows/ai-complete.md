@@ -1,10 +1,10 @@
-# gemini-complete.yml
+# ai-complete.yml
 
 Closes the lifecycle loop when a pull request is merged. Finds the linked issue, removes in-progress labels, and marks it as completed.
 
 ## Trigger
 
-Standalone workflow — not routed through `gemini-dispatch`. Fires on every `pull_request: closed` event where `merged == true`.
+Standalone workflow — not routed through `ai-dispatch`. Fires on every `pull_request: closed` event where `merged == true`.
 
 ## Behaviour
 

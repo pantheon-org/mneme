@@ -1,4 +1,4 @@
-# gemini-dispatch.yml
+# ai-dispatch.yml
 
 Entry point for all Gemini CLI automation. Listens to GitHub events, applies guard conditions, extracts a command, and delegates to the appropriate child workflow.
 

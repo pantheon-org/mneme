@@ -1,4 +1,4 @@
-# gemini-next.yml
+# ai-next.yml
 
 Picks the highest-priority `status: ready` issue and runs a full implementation on it. Enforces serial execution — skips if any issue is already `status: wip`.
 
@@ -23,7 +23,7 @@ Picks the highest-priority `status: ready` issue and runs a full implementation 
    - Sorts by priority weight
    - Outputs `issue_number` and `issue_title` of the top candidate
 
-2. **`implement`** — calls `gemini-invoke.yml` with `trigger: implement` and the selected `issue_number`. Skipped if no issue was selected.
+2. **`implement`** — calls `ai-invoke.yml` with `trigger: implement` and the selected `issue_number`. Skipped if no issue was selected.
 
 ## Permissions
 

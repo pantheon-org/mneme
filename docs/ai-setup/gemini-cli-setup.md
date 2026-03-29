@@ -224,7 +224,9 @@ Set under **Settings > Variables > Actions**:
 
 | Secret | Required | Purpose |
 |---|---|---|
-| `GEMINI_API_KEY` | Yes | Authenticates with the Gemini API |
+| `GEMINI_API_KEY` | Yes | Authenticates with the Gemini API (primary) |
+| `CEREBRAS_API_KEY` | No | Fallback inference when Gemini quota is exhausted — see [cerebras-setup.md](cerebras-setup.md) |
+| `MISTRAL_API_KEY` | No | Secondary fallback after Cerebras — see [mistral-setup.md](mistral-setup.md) |
 | `APP_PRIVATE_KEY` | No | GitHub App private key (advanced auth) |
 
 ### Advanced: GitHub App Authentication

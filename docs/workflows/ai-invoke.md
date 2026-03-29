@@ -1,10 +1,10 @@
-# gemini-invoke.yml
+# ai-invoke.yml
 
 Handles ad-hoc `@gemini-cli` requests on issues and pull requests.
 
 ## Called by
 
-`gemini-dispatch` when `command == 'invoke'` (any `@gemini-cli` comment without a recognised `/command`).
+`ai-dispatch` when `command == 'invoke'` (any `@gemini-cli` comment without a recognised `/command`).
 
 ## Inputs
 

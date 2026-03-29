@@ -1,4 +1,4 @@
-name: '🔎 Gemini Review'
+name: '🔎 AI Review'
 
 on:
   workflow_call:
@@ -29,6 +29,18 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
 
+      - name: 'Capture PR diff'
+        id: 'pr_diff'
+        run: |
+          diff=$(gh pr diff ${{ github.event.pull_request.number }} 2>/dev/null | head -c 32000)
+          {
+            echo 'diff<<EOF'
+            echo "$diff"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+
       - name: 'Run Gemini PR review'
         id: 'gemini_review'
         continue-on-error: true
@@ -45,7 +57,7 @@ jobs:
           gemini_model: '${{ vars.GEMINI_MODEL }}'
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
-          workflow_name: 'gemini-review'
+          workflow_name: 'ai-review'
           settings: |-
             {
               "model": {
@@ -82,3 +94,53 @@ jobs:
             5. Overall verdict: Approve / Request Changes / Comment
 
             Use `gh pr review ${{ github.event.pull_request.number }} --comment --body "..."` to post your review.
+
+      - name: 'AI inference fallback'
+        id: 'ai_fallback'
+        if: "steps.gemini_review.outcome == 'failure'"
+        uses: './.github/actions/ai-fallback'
+        with:
+          cerebras_api_key: '${{ secrets.CEREBRAS_API_KEY }}'
+          mistral_api_key: '${{ secrets.MISTRAL_API_KEY }}'
+          prompt: |-
+            You are reviewing a pull request for the mneme repository (vault-core), a Bun monorepo
+            implementing persistent memory for AI coding agents.
+
+            Key conventions to enforce:
+            - TypeScript strict mode (strict, exactOptionalPropertyTypes, noUncheckedIndexedAccess)
+            - Bun runtime only: use bun:sqlite, bun:test — never better-sqlite3, Jest, or Vitest
+            - NodeNext module resolution: .js extensions required in imports
+            - Arrow functions preferred over function declarations
+            - No comments in code unless logic is non-obvious
+            - No unused imports
+            - Max 110 non-blank lines per file
+            - One exported function/class per module
+            - import type for type-only imports
+
+            PR diff:
+            ${{ steps.pr_diff.outputs.diff }}
+
+            Provide a review covering:
+            1. Summary of changes (2–3 sentences)
+            2. Any violations of the conventions above
+            3. Correctness concerns (memory model, atomic writes, non-blocking capture)
+            4. Test coverage gaps
+            5. Overall verdict: Approve / Request Changes / Comment
+
+      - name: 'Post fallback review'
+        if: "steps.gemini_review.outcome == 'failure' && steps.ai_fallback.outputs.summary != ''"
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
+        env:
+          AI_REVIEW: '${{ steps.ai_fallback.outputs.summary }}'
+          AI_BACKEND: '${{ steps.ai_fallback.outputs.backend_used }}'
+          PR_NUMBER: '${{ github.event.pull_request.number }}'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |-
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: parseInt(process.env.PR_NUMBER),
+              body: `🤖 **Review** (${process.env.AI_BACKEND || 'fallback'})\n\n${process.env.AI_REVIEW}`,
+              event: 'COMMENT',
+            });

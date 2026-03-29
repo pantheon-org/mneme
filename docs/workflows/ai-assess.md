@@ -1,10 +1,10 @@
-# gemini-assess.yml
+# ai-assess.yml
 
 Assesses whether a newly opened issue is ready to be worked on independently or needs more information first.
 
 ## Called by
 
-`gemini-dispatch` for every `issues` event (`opened`, `reopened`), in parallel with `gemini-triage`.
+`ai-dispatch` for every `issues` event (`opened`, `reopened`), in parallel with `ai-triage`.
 
 ## Inputs
 
@@ -41,7 +41,7 @@ If any criterion is not met, the issue is assessed as **needs-info**.
 
 2. **`Apply label and post assessment`** — parses the JSON, then:
    - Applies one of `status: ready` or `status: needs-info` (validated against that allowlist before calling the API; warns if the label doesn't exist in the repository)
-   - Posts a comment prefixed with `🤖 **Gemini Assessment**` and either `✅ Ready to work` or `⏳ Needs more info`, followed by Gemini's 2–3 sentence reason
+   - Posts a comment prefixed with `🤖 **AI Assessment**` and either `✅ Ready to work` or `⏳ Needs more info`, followed by Gemini's 2–3 sentence reason
 
 ## Required labels
 

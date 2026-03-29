@@ -171,13 +171,19 @@ jobs:
         with:
           github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |-
+            const backend = process.env.AI_BACKEND || 'gemini';
+            const raw = process.env.AI_RESPONSE?.trim() ?? '';
+            core.info(`LLM backend=${backend} response_chars=${raw.length}`);
+
             let parsed;
             try {
-              const raw = process.env.AI_RESPONSE.trim();
               const jsonMatch = raw.match(/\{[\s\S]*\}/);
               parsed = JSON.parse(jsonMatch?.[0] || raw);
             } catch (e) {
-              core.warning(`Could not parse Gemini summary as JSON: ${e.message}`);
+              core.warning(`Could not parse ${backend} triage as JSON: ${e.message}\nRaw (first 500 chars): ${raw.slice(0, 500)}`);
+              await core.summary.addHeading('AI Triage', 3)
+                .addTable([[{data:'Backend',header:true},{data:'Parse',header:true}],[backend,`❌ ${e.message.slice(0,80)}`]])
+                .write();
               return;
             }
 
@@ -211,6 +217,7 @@ jobs:
                 issue_number: context.issue.number,
                 labels: labelsToApply,
               });
+              core.info(`Applied labels: ${labelsToApply.join(', ')}`);
             }
 
             if (parsed.comment) {
@@ -218,6 +225,13 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: `🤖 **Triage** (${process.env.AI_BACKEND || 'gemini'})\n\n${parsed.comment}`,
+                body: `🤖 **Triage** (${backend})\n\n${parsed.comment}`,
               });
             }
+
+            await core.summary.addHeading('AI Triage', 3)
+              .addTable([
+                [{data:'Backend',header:true},{data:'Response chars',header:true},{data:'Labels applied',header:true}],
+                [backend, String(raw.length), labelsToApply.join(', ') || 'none'],
+              ])
+              .write();

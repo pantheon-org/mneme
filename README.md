@@ -1,5 +1,8 @@
 # mneme / vault-core
 
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/pantheon-org/mneme/badge)](https://scorecard.dev/viewer/?uri=github.com/pantheon-org/mneme)
+
 Psychology-grounded, Obsidian-backed persistent memory for AI coding agents.
 
 AI coding agents (Claude Code, OpenCode) have no memory between sessions. vault-core solves this by automatically capturing important decisions, constraints, bugs, and patterns during sessions, storing them in an Obsidian vault, and injecting the most relevant memories at the start of each new session.

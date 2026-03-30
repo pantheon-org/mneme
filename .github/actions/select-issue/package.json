@@ -1,5 +1,5 @@
 {
-  "name": "github-scripts",
+  "name": "@pantheon-org/select-issue",
   "private": true,
   "type": "module",
   "dependencies": {

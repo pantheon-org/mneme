@@ -1,118 +1,14 @@
 import { appendFileSync } from "node:fs";
+import { callAnthropic } from "./providers/anthropic";
+import { callCerebras } from "./providers/cerebras";
+import { callGemini } from "./providers/gemini";
+import { callMistral } from "./providers/mistral";
 
 const env = process.env;
 
 const appendOutput = (key: string, value: string): void => {
   const delim = "OUTPUT_EOF";
   appendFileSync(env.GITHUB_OUTPUT!, `${key}<<${delim}\n${value}\n${delim}\n`);
-};
-
-const callCerebras = async (
-  apiKey: string,
-  model: string,
-  prompt: string,
-  maxTokens: number,
-): Promise<string> => {
-  const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: maxTokens,
-      temperature: 0,
-    }),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Cerebras HTTP ${response.status}: ${text.slice(0, 200)}`);
-  }
-  const body = (await response.json()) as {
-    choices: { message: { content: string } }[];
-  };
-  const content = body.choices[0]?.message?.content;
-  if (!content) throw new Error("Unexpected Cerebras response shape");
-  return content;
-};
-
-const callMistral = async (
-  apiKey: string,
-  model: string,
-  prompt: string,
-  maxTokens: number,
-): Promise<string> => {
-  const response = await fetch(
-    "https://api.mistral.ai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: maxTokens,
-        temperature: 0,
-      }),
-    },
-  );
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Mistral HTTP ${response.status}: ${text.slice(0, 200)}`);
-  }
-  const body = (await response.json()) as {
-    choices: { message: { content: string } }[];
-  };
-  const content = body.choices[0]?.message?.content;
-  if (!content) throw new Error("Unexpected Mistral response shape");
-  return content;
-};
-
-const callAnthropic = async (
-  apiKey: string,
-  model: string,
-  prompt: string,
-  maxTokens: number,
-): Promise<string> => {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Anthropic HTTP ${response.status}: ${text.slice(0, 200)}`);
-  }
-  const body = (await response.json()) as {
-    content: { type: string; text: string }[];
-  };
-  const block = body.content[0];
-  if (!block || block.type !== "text")
-    throw new Error("Unexpected Anthropic response shape");
-  return block.text;
-};
-
-const callGemini = (model: string, prompt: string): string => {
-  const result = Bun.spawnSync(["gemini", "--model", model, "-p", prompt], {
-    env: { ...env },
-  });
-  if (result.exitCode !== 0) {
-    const stderr = result.stderr.toString().slice(0, 200);
-    throw new Error(`Gemini CLI exit ${result.exitCode}: ${stderr}`);
-  }
-  return result.stdout.toString();
 };
 
 const providers = (env.AI_PROVIDER_ORDER ?? "")
@@ -130,10 +26,7 @@ for (const provider of providers) {
       continue;
     }
     try {
-      const summary = callGemini(
-        env.GEMINI_MODEL ?? "gemini-2.5-pro",
-        prompt,
-      );
+      const summary = callGemini(env.GEMINI_MODEL ?? "gemini-2.5-pro", prompt);
       appendOutput("summary", summary);
       appendOutput("backend_used", "gemini");
       process.exit(0);
@@ -152,12 +45,7 @@ for (const provider of providers) {
   try {
     let summary: string;
     if (provider === "cerebras") {
-      summary = await callCerebras(
-        apiKey,
-        env.CEREBRAS_MODEL ?? "gpt-oss-120b",
-        prompt,
-        maxTokens,
-      );
+      summary = await callCerebras(apiKey, env.CEREBRAS_MODEL ?? "gpt-oss-120b", prompt, maxTokens);
     } else if (provider === "mistral") {
       summary = await callMistral(
         apiKey,

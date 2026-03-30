@@ -5,6 +5,7 @@
     "": {
       "name": "github-scripts",
       "devDependencies": {
+        "@types/node": "^25.5.0",
         "bun-types": "latest",
         "typescript": "^5",
       },

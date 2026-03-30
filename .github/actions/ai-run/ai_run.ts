@@ -26,7 +26,7 @@ for (const provider of providers) {
       continue;
     }
     try {
-      const summary = callGemini(env.GEMINI_MODEL ?? "gemini-2.5-pro", prompt);
+      const summary = await callGemini(key, env.GEMINI_MODEL ?? "gemini-2.5-pro", prompt, maxTokens);
       appendOutput("summary", summary);
       appendOutput("backend_used", "gemini");
       process.exit(0);

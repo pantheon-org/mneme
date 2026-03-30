@@ -15,9 +15,6 @@ inputs:
   gemini_model:
     required: false
     default: 'gemini-2.5-pro'
-  gemini_cli_version:
-    required: false
-    default: '0'
   anthropic_api_key:
     required: false
     default: ''
@@ -54,11 +51,6 @@ runs:
     - name: Setup Bun
       uses: 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6' # v2
 
-    - name: Install Gemini CLI
-      if: contains(inputs.provider_order, 'gemini') && inputs.gemini_api_key != ''
-      shell: bash
-      run: npm install -g @google/gemini-cli@${{ inputs.gemini_cli_version || 'latest' }}
-
     - name: Dispatch
       id: dispatch
       shell: bash
@@ -68,7 +60,6 @@ runs:
         MAX_TOKENS:         ${{ inputs.max_tokens }}
         GEMINI_API_KEY:     ${{ inputs.gemini_api_key }}
         GEMINI_MODEL:       ${{ inputs.gemini_model }}
-        GEMINI_CLI_VERSION: ${{ inputs.gemini_cli_version }}
         ANTHROPIC_API_KEY:  ${{ inputs.anthropic_api_key }}
         ANTHROPIC_MODEL:    ${{ inputs.anthropic_model }}
         CEREBRAS_API_KEY:   ${{ inputs.cerebras_api_key }}

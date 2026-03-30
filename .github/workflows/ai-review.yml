@@ -55,7 +55,6 @@ jobs:
           prompt:             '${{ steps.build-prompt.outputs.prompt }}'
           gemini_api_key:     '${{ secrets.GEMINI_API_KEY }}'
           gemini_model:       '${{ vars.GEMINI_MODEL || ''gemini-2.5-pro'' }}'
-          gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION || ''0'' }}'
           anthropic_api_key:  '${{ secrets.ANTHROPIC_API_KEY }}'
           anthropic_model:    '${{ vars.ANTHROPIC_MODEL || ''claude-sonnet-4-6'' }}'
           cerebras_api_key:   '${{ secrets.CEREBRAS_API_KEY }}'

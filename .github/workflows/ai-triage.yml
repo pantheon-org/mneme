@@ -32,9 +32,6 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' # v4
 
-      - name: 'Setup Bun'
-        uses: 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6' # v2
-
       - name: 'Get repository labels'
         id: 'get_labels'
         uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
@@ -60,13 +57,14 @@ jobs:
       - name: 'Build prompt'
         id: 'build-prompt'
         if: "${{ steps.get_labels.outputs.available_labels != '' }}"
-        env:
-          ISSUE_TITLE: '${{ github.event.issue.title }}'
-          ISSUE_BODY: '${{ github.event.issue.body }}'
-          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
-          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
-          CURRENT_LABELS: '${{ inputs.current_labels }}'
-        run: bun run .github/scripts/prompt_triage.ts
+        uses: './.github/actions/build-prompt'
+        with:
+          workflow:           'triage'
+          issue_title:        '${{ github.event.issue.title }}'
+          issue_body:         '${{ github.event.issue.body }}'
+          available_labels:   '${{ steps.get_labels.outputs.available_labels }}'
+          current_labels:     '${{ inputs.current_labels }}'
+          additional_context: '${{ inputs.additional_context }}'
 
       - name: 'Run AI'
         id: 'ai'

@@ -5,8 +5,11 @@ description: >
 
 inputs:
   provider_order:
-    description: Comma-separated list of provider IDs (e.g. "gemini,anthropic,cerebras,mistral")
-    required: true
+    description: >
+      Comma-separated list of provider IDs to try in order.
+      Defaults to all known providers; those with no API key are skipped automatically.
+    required: false
+    default: 'cerebras,gemini,anthropic,mistral'
   prompt:
     required: true
   gemini_api_key:

@@ -35,7 +35,7 @@ jobs:
         id: 'ai'
         uses: './.github/actions/ai-run'
         with:
-          provider_order:     '${{ vars.AI_PROVIDER_ORDER || ''gemini,cerebras,mistral'' }}'
+          provider_order:     '${{ vars.AI_PROVIDER_ORDER }}'
           prompt:             '${{ steps.build-prompt.outputs.prompt }}'
           gemini_api_key:     '${{ secrets.GEMINI_API_KEY }}'
           gemini_model:       '${{ vars.GEMINI_MODEL || ''gemini-2.5-pro'' }}'

@@ -11,7 +11,8 @@ const appendOutput = (key: string, value: string): void => {
   appendFileSync(env.GITHUB_OUTPUT!, `${key}<<${delim}\n${value}\n${delim}\n`);
 };
 
-const providers = (env.AI_PROVIDER_ORDER ?? "")
+const DEFAULT_PROVIDER_ORDER = "cerebras,gemini,anthropic,mistral";
+const providers = (env.AI_PROVIDER_ORDER || DEFAULT_PROVIDER_ORDER)
   .split(",")
   .map((p) => p.trim())
   .filter(Boolean);

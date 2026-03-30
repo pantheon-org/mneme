@@ -1,19 +1,19 @@
 # Cerebras — Setup Guide
 
-Step-by-step guide to adding Cerebras as an AI inference fallback for the workflow automation layer.
+Step-by-step guide to adding Cerebras as an AI provider for the workflow automation layer.
 
 ---
 
 ## Overview
 
-[Cerebras](https://cloud.cerebras.ai) provides a free-tier OpenAI-compatible inference API. It serves as the **primary fallback** when the Gemini daily quota is exhausted.
+[Cerebras](https://cloud.cerebras.ai) provides a free-tier OpenAI-compatible inference API with very fast inference due to dedicated hardware. Once `CEREBRAS_API_KEY` is set, Cerebras will be used automatically according to `AI_PROVIDER_ORDER`.
 
-| Model | Free tier limit |
-|-------|----------------|
-| `gpt-oss-120b` | 14,400 requests/day · 30 RPM · 1M tokens/day |
-| `llama3.1-8b` | 14,400 requests/day · 30 RPM · 1M tokens/day |
+| Model | Notes |
+|-------|-------|
+| `qwen-3-235b-a22b-instruct-2507` | Large (235B), recommended — strong reasoning, fast on Cerebras hardware |
+| `llama3.1-8b` | Small — use when latency is the priority |
 
-The `gpt-oss-120b` model is used by default — it provides strong reasoning at the same RPD ceiling as Llama.
+> **Note:** `gpt-oss-120b` has been removed from the Cerebras API and will return a 404. Set `CEREBRAS_MODEL` to `qwen-3-235b-a22b-instruct-2507`.
 
 ---
 
@@ -60,15 +60,26 @@ The `gpt-oss-120b` model is used by default — it provides strong reasoning at 
 
 ---
 
-## Step 4 — Verify
+## Step 4 — Set the Model Variable
+
+The default model in `action.yml` is stale. Set the repository variable explicitly:
+
+```bash
+gh variable set CEREBRAS_MODEL --body "qwen-3-235b-a22b-instruct-2507" --repo pantheon-org/mneme
+```
+
+Or via **Settings > Variables > Actions > New repository variable**.
+
+---
+
+## Step 5 — Verify
 
 Cerebras activates automatically once the secret is present. To confirm it is working:
 
-1. Exhaust or temporarily invalidate the Gemini API key to force a fallback.
-2. Trigger a triage, assess, or review workflow.
-3. The resulting GitHub comment footer will read `(cerebras)` instead of `(gemini)`.
+1. Trigger a triage, assess, or review workflow (e.g. open an issue).
+2. The resulting GitHub comment footer will include `(cerebras)`.
 
-Alternatively, check the workflow run logs — the fallback step will print `Cerebras succeeded.` to stderr.
+Alternatively, check the workflow run logs — the dispatch step logs `[ai-run] backend_used=cerebras`.
 
 ---
 
@@ -78,13 +89,22 @@ Alternatively, check the workflow run logs — the fallback step will print `Cer
 
 | Secret | Required | Purpose |
 |--------|----------|---------|
-| `CEREBRAS_API_KEY` | Yes (for fallback) | Authenticates with the Cerebras inference API |
+| `CEREBRAS_API_KEY` | Yes (to use Cerebras) | Authenticates with the Cerebras inference API |
+
+### Variables
+
+| Variable | Recommended value | Purpose |
+|----------|-------------------|---------|
+| `CEREBRAS_MODEL` | `qwen-3-235b-a22b-instruct-2507` | Model to use for inference |
+| `AI_PROVIDER_ORDER` | `cerebras,gemini,anthropic,mistral` | Controls provider priority |
 
 ### Behaviour
 
-- Cerebras is only invoked when Gemini fails with a `TerminalQuotaError` (exit code 1).
-- If Cerebras also fails, the workflow falls through to Mistral (if `MISTRAL_API_KEY` is set).
-- If neither fallback key is present, the workflow step is skipped and the run exits without posting a comment.
+- Cerebras is invoked when it appears in `AI_PROVIDER_ORDER` and `CEREBRAS_API_KEY` is set.
+- If the call fails, the next provider in `AI_PROVIDER_ORDER` is tried.
+- If no provider succeeds, the workflow step exits with failure.
+
+See [configuration.md](../configuration.md) for all available variables.
 
 ---
 
@@ -92,7 +112,7 @@ Alternatively, check the workflow run logs — the fallback step will print `Cer
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| Fallback step skipped silently | `CEREBRAS_API_KEY` secret not set | Add the secret (Step 3) |
-| `HTTP 401` in fallback step logs | API key invalid or revoked | Generate a new key at cloud.cerebras.ai |
-| `HTTP 429` in fallback step logs | Rate limit hit (30 RPM) | Unlikely at normal volume; add `MISTRAL_API_KEY` as secondary fallback |
-| Comment footer shows `(fallback)` | `backend_used` output was empty | Transient issue; re-run the workflow |
+| `[ai-run] skipping cerebras: no API key` | `CEREBRAS_API_KEY` secret not set | Add the secret (Step 3) |
+| `Cerebras HTTP 401` in logs | API key invalid or revoked | Generate a new key at cloud.cerebras.ai |
+| `Cerebras HTTP 404` in logs | Model not found | Set `CEREBRAS_MODEL` to `qwen-3-235b-a22b-instruct-2507` (Step 4) |
+| `Cerebras HTTP 429` in logs | Rate limit hit (30 RPM) | Add a second provider as fallback via `AI_PROVIDER_ORDER` |

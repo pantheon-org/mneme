@@ -1,0 +1,9 @@
+{
+  "name": "@pantheon-org/ai-run",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5"
+  }
+}

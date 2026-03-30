@@ -9,11 +9,11 @@ A label-driven issue lifecycle that ties GitHub labels to automated workflow tri
 ```mermaid
 stateDiagram-v2
     [*] --> New : issue opened
-    New --> Triaged : gemini-triage labels type + domain
-    Triaged --> Ready : gemini-assess — status ready
-    Triaged --> NeedsInfo : gemini-assess — status needs-info
+    New --> Triaged : ai-triage labels type + domain
+    Triaged --> Ready : ai-assess — status ready
+    Triaged --> NeedsInfo : ai-assess — status needs-info
     NeedsInfo --> Ready : human clarifies via @gemini-cli /assess
-    Ready --> WIP : gemini-invoke creates branch + PR
+    Ready --> WIP : ai-invoke creates branch + PR
     WIP --> Completed : PR merged
     Completed --> [*]
 ```
@@ -24,16 +24,16 @@ stateDiagram-v2
 
 ### Stage 1 — New (`status: new`)
 
-Auto-applied by a `github-script` step in `gemini-dispatch` before triage and assess fire.
+Auto-applied by a `github-script` step in `ai-dispatch` before triage and assess fire.
 Signals that the issue has not yet been reviewed.
 
-Parallel triggers: `gemini-triage` + `gemini-assess`.
+Parallel triggers: `ai-triage` + `ai-assess`.
 
 ---
 
 ### Stage 2 — Triaged
 
-`gemini-triage` removes `status: new` and applies:
+`ai-triage` removes `status: new` and applies:
 
 #### Type labels — exactly one
 
@@ -71,7 +71,7 @@ Validated against the existing issue backlog (9 issues). Existing flat labels (`
 
 ### Stage 3 — Assessed
 
-`gemini-assess` runs in parallel with triage and applies one of:
+`ai-assess` runs in parallel with triage and applies one of:
 
 | Label | Meaning |
 |---|---|
@@ -80,7 +80,7 @@ Validated against the existing issue backlog (9 issues). Existing flat labels (`
 
 When `status: needs-info` is set, the assessment comment lists what is missing. Once the author clarifies, a human re-triggers with `@gemini-cli /assess`. When `status: ready` is applied the lifecycle advances automatically.
 
-`@gemini-cli /triage` can be used at any point to correct type, domain, package, or priority labels. It may also change status, subject to the following rules:
+`@gemini-cli /triage` can be used at any point to correct type, domain, package, or priority labels (this triggers `ai-triage`). It may also change status, subject to the following rules:
 
 | Current status | Re-triage may update status? |
 |---|---|
@@ -94,7 +94,7 @@ When `status: needs-info` is set, the assessment comment lists what is missing. 
 
 ### Stage 4 — Work in progress (`status: wip`)
 
-Triggered by `gemini-next.yml`, which runs on a daily schedule (08:00 UTC Mon–Fri) or on demand via `@gemini-cli /next`. It selects the single highest-priority `status: ready` issue and blocks if anything is already `status: wip`. `gemini-invoke` then runs a **full implementation**:
+Triggered by `ai-next.yml`, which runs on a daily schedule (08:00 UTC Mon–Fri) or on demand via `@gemini-cli /next`. It selects the single highest-priority `status: ready` issue and blocks if anything is already `status: wip`. `ai-invoke` then runs a **full implementation**:
 
 1. Creates a feature branch (`fix/<issue-number>-<slug>` or `feat/<issue-number>-<slug>`)
 2. Implements the change following all repository conventions (see `AGENTS.md`)
@@ -108,7 +108,7 @@ Priority order: `priority: critical` → `priority: high` → `priority: medium`
 
 ### Stage 5 — Completed (`status: completed`)
 
-When the linked PR is merged, a `gemini-complete` workflow fires (`pull_request: closed` + `merged == true`):
+When the linked PR is merged, a `ai-complete` workflow fires (`pull_request: closed` + `merged == true`):
 
 1. Removes `status: wip` (and `status: ready` if somehow still present)
 2. Applies `status: completed`
@@ -156,14 +156,14 @@ Domain labels are marked **proposed** pending taxonomy confirmation.
 
 ```mermaid
 flowchart TD
-    E[GitHub Event] --> D[gemini-dispatch.yml]
-    D -->|issues opened — applies status:new| T[gemini-triage.yml]
-    D -->|issues opened — parallel with triage| A[gemini-assess.yml]
-    D -->|command == review| R[gemini-review.yml]
-    D -->|command == invoke| I[gemini-invoke.yml — comment]
+    E[GitHub Event] --> D[ai-dispatch.yml]
+    D -->|issues opened — applies status:new| T[ai-triage.yml]
+    D -->|issues opened — parallel with triage| A[ai-assess.yml]
+    D -->|command == review| R[ai-review.yml]
+    D -->|command == invoke| I[ai-invoke.yml — comment]
     D -->|command == assess| A
-    D -->|command == next| N[gemini-next.yml]
+    D -->|command == next| N[ai-next.yml]
     S[schedule / workflow_dispatch] --> N
-    N -->|highest priority status:ready| I2[gemini-invoke.yml — implement]
-    PR[PR merged] --> C[gemini-complete.yml]
+    N -->|highest priority status:ready| I2[ai-invoke.yml — implement]
+    PR[PR merged] --> C[ai-complete.yml]
 ```

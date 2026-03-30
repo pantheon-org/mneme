@@ -1,8 +1,8 @@
 import { appendFileSync } from "node:fs";
-import { callAnthropic } from "./providers/anthropic";
-import { callCerebras } from "./providers/cerebras";
-import { callGemini } from "./providers/gemini";
-import { callMistral } from "./providers/mistral";
+import { callAnthropic } from "./providers/anthropic.ts";
+import { callCerebras } from "./providers/cerebras.ts";
+import { callGemini } from "./providers/gemini.ts";
+import { callMistral } from "./providers/mistral.ts";
 
 const env = process.env;
 
@@ -27,7 +27,12 @@ for (const provider of providers) {
       continue;
     }
     try {
-      const summary = await callGemini(key, env.GEMINI_MODEL ?? "gemini-2.5-pro", prompt, maxTokens);
+      const summary = await callGemini(
+        key,
+        env.GEMINI_MODEL ?? "gemini-2.5-pro",
+        prompt,
+        maxTokens,
+      );
       appendOutput("summary", summary);
       appendOutput("backend_used", "gemini");
       process.exit(0);

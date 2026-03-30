@@ -1,0 +1,72 @@
+name: AI Run
+description: >
+  Dispatch a prompt to the first available AI provider in provider_order.
+  Providers with no API key are silently skipped.
+
+inputs:
+  provider_order:
+    description: >
+      Comma-separated list of provider IDs to try in order.
+      Defaults to all known providers; those with no API key are skipped automatically.
+    required: false
+    default: 'cerebras,gemini,anthropic,mistral'
+  prompt:
+    required: true
+  gemini_api_key:
+    required: false
+    default: ''
+  gemini_model:
+    required: false
+    default: 'gemini-2.5-pro'
+  anthropic_api_key:
+    required: false
+    default: ''
+  anthropic_model:
+    required: false
+    default: 'claude-sonnet-4-6'
+  cerebras_api_key:
+    required: false
+    default: ''
+  cerebras_model:
+    required: false
+    default: 'gpt-oss-120b'
+  mistral_api_key:
+    required: false
+    default: ''
+  mistral_model:
+    required: false
+    default: 'mistral-large-latest'
+  max_tokens:
+    required: false
+    default: '4096'
+
+outputs:
+  summary:
+    description: The response text from the AI provider
+    value: ${{ steps.dispatch.outputs.summary }}
+  backend_used:
+    description: Which provider produced the response
+    value: ${{ steps.dispatch.outputs.backend_used }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6' # v2
+
+    - name: Dispatch
+      id: dispatch
+      shell: bash
+      env:
+        AI_PROVIDER_ORDER:  ${{ inputs.provider_order }}
+        PROMPT:             ${{ inputs.prompt }}
+        MAX_TOKENS:         ${{ inputs.max_tokens }}
+        GEMINI_API_KEY:     ${{ inputs.gemini_api_key }}
+        GEMINI_MODEL:       ${{ inputs.gemini_model }}
+        ANTHROPIC_API_KEY:  ${{ inputs.anthropic_api_key }}
+        ANTHROPIC_MODEL:    ${{ inputs.anthropic_model }}
+        CEREBRAS_API_KEY:   ${{ inputs.cerebras_api_key }}
+        CEREBRAS_MODEL:     ${{ inputs.cerebras_model }}
+        MISTRAL_API_KEY:    ${{ inputs.mistral_api_key }}
+        MISTRAL_MODEL:      ${{ inputs.mistral_model }}
+      run: bun run "${{ github.action_path }}/ai_run.ts"

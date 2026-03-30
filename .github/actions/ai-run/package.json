@@ -1,11 +1,9 @@
 {
-  "name": "@pantheon-org/select-issue",
+  "name": "@pantheon-org/ai-run",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "@octokit/rest": "^21"
-  },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "bun-types": "latest",
     "typescript": "^5"
   }

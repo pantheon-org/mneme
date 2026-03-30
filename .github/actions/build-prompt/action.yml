@@ -1,0 +1,68 @@
+name: Build Prompt
+description: Constructs the AI prompt for a given workflow type.
+
+inputs:
+  workflow:
+    description: "Workflow type: assess, invoke, triage, or review"
+    required: true
+  issue_title:
+    required: false
+    default: ''
+  issue_body:
+    required: false
+    default: ''
+  available_labels:
+    required: false
+    default: ''
+  current_labels:
+    required: false
+    default: ''
+  additional_context:
+    required: false
+    default: ''
+  trigger:
+    required: false
+    default: 'comment'
+  issue_number:
+    required: false
+    default: ''
+  repository:
+    required: false
+    default: ''
+  event_name:
+    required: false
+    default: ''
+  title:
+    required: false
+    default: ''
+  pr_diff:
+    required: false
+    default: ''
+
+outputs:
+  prompt:
+    description: The constructed prompt
+    value: ${{ steps.build.outputs.prompt }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6' # v2
+
+    - name: Build
+      id: build
+      shell: bash
+      env:
+        ISSUE_TITLE:        ${{ inputs.issue_title }}
+        ISSUE_BODY:         ${{ inputs.issue_body }}
+        AVAILABLE_LABELS:   ${{ inputs.available_labels }}
+        CURRENT_LABELS:     ${{ inputs.current_labels }}
+        ADDITIONAL_CONTEXT: ${{ inputs.additional_context }}
+        TRIGGER:            ${{ inputs.trigger }}
+        ISSUE_NUMBER:       ${{ inputs.issue_number }}
+        REPOSITORY:         ${{ inputs.repository }}
+        EVENT_NAME:         ${{ inputs.event_name }}
+        TITLE:              ${{ inputs.title }}
+        PR_DIFF:            ${{ inputs.pr_diff }}
+      run: bun run "${{ github.action_path }}/prompt_${{ inputs.workflow }}.ts"

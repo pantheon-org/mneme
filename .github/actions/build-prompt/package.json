@@ -1,10 +1,7 @@
 {
-  "name": "@pantheon-org/select-issue",
+  "name": "@pantheon-org/build-prompt",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "@octokit/rest": "^21"
-  },
   "devDependencies": {
     "bun-types": "latest",
     "typescript": "^5"

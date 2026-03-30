@@ -80,6 +80,43 @@ The following paths are used at runtime and are not configurable:
 | `~/.vault-core/pending.jsonl` | Capture queue durability buffer — replayed on startup |
 | `~/.vault-core/consolidation-queue.jsonl` | Consolidation proposals buffer |
 
+## GitHub Actions AI provider selection
+
+The AI workflows (`ai-assess`, `ai-triage`, `ai-review`, `ai-invoke`) use a configurable
+provider dispatch system. Providers are tried in order; any provider with no API key secret
+is silently skipped. If all providers are exhausted the workflow step exits with failure.
+
+### Repository variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AI_PROVIDER_ORDER` | `gemini,cerebras,mistral` | Comma-separated ordered list of provider IDs. Supported values: `gemini`, `anthropic`, `cerebras`, `mistral`. |
+| `GEMINI_MODEL` | `gemini-2.5-pro` | Gemini model name |
+| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | Anthropic model name |
+| `CEREBRAS_MODEL` | `gpt-oss-120b` | Cerebras model name |
+| `MISTRAL_MODEL` | `mistral-large-latest` | Mistral model name |
+| `GEMINI_CLI_VERSION` | `0` (latest) | Gemini CLI npm package version |
+
+### Secrets required per provider
+
+| Secret | Provider | Required when |
+|--------|----------|---------------|
+| `GEMINI_API_KEY` | Gemini | `gemini` is in `AI_PROVIDER_ORDER` |
+| `ANTHROPIC_API_KEY` | Anthropic | `anthropic` is in `AI_PROVIDER_ORDER` |
+| `CEREBRAS_API_KEY` | Cerebras | `cerebras` is in `AI_PROVIDER_ORDER` |
+| `MISTRAL_API_KEY` | Mistral | `mistral` is in `AI_PROVIDER_ORDER` |
+
+### Example: switch to Anthropic-only
+
+Set the repository variable:
+
+```
+AI_PROVIDER_ORDER = anthropic
+```
+
+And ensure `ANTHROPIC_API_KEY` is set as a repository secret. All other provider secrets
+can be left unset — they will be silently skipped.
+
 ## Hook environment variables
 
 These environment variables are read by Claude Code hook scripts at runtime. They are set by Claude Code, not configured in `config.toml`.

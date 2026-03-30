@@ -90,12 +90,11 @@ is silently skipped. If all providers are exhausted the workflow step exits with
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AI_PROVIDER_ORDER` | `gemini,cerebras,mistral` | Comma-separated ordered list of provider IDs. Supported values: `gemini`, `anthropic`, `cerebras`, `mistral`. |
-| `GEMINI_MODEL` | `gemini-2.5-pro` | Gemini model name |
-| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | Anthropic model name |
-| `CEREBRAS_MODEL` | `gpt-oss-120b` | Cerebras model name |
-| `MISTRAL_MODEL` | `mistral-large-latest` | Mistral model name |
-| `GEMINI_CLI_VERSION` | `0` (latest) | Gemini CLI npm package version |
+| `AI_PROVIDER_ORDER` | `cerebras,gemini,anthropic,mistral` | Comma-separated ordered list of provider IDs. Supported values: `gemini`, `anthropic`, `cerebras`, `mistral`. If unset, all providers are tried in the default order. |
+| `GEMINI_MODEL` | `gemini-2.5-pro` | Gemini model ID |
+| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | Anthropic model ID |
+| `CEREBRAS_MODEL` | `qwen-3-235b-a22b-instruct-2507` | Cerebras model ID — see [cerebras-setup.md](ai-setup/cerebras-setup.md) for available models |
+| `MISTRAL_MODEL` | `mistral-large-3-25-12` | Mistral model ID — pin to a versioned ID; `*-latest` aliases are not documented — see [mistral-setup.md](ai-setup/mistral-setup.md) |
 
 ### Secrets required per provider
 

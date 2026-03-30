@@ -1,18 +1,20 @@
-# Mistral La Plateforme — Setup Guide
+# Mistral — Setup Guide
 
-Step-by-step guide to adding Mistral as a secondary AI inference fallback for the workflow automation layer.
+Step-by-step guide to adding Mistral as an AI provider for the workflow automation layer.
 
 ---
 
 ## Overview
 
-[Mistral La Plateforme](https://console.mistral.ai) provides a free **Experiment plan** with generous token limits. It serves as the **secondary fallback** — invoked only when both Gemini and Cerebras are unavailable.
+[Mistral La Plateforme](https://console.mistral.ai) provides a free **Experiment plan** with generous token limits. Once `MISTRAL_API_KEY` is set, Mistral will be used automatically according to `AI_PROVIDER_ORDER`.
 
-| Model | Free tier limit |
-|-------|----------------|
-| `mistral-large-latest` | 1 req/s · 500K tokens/min · 1B tokens/month |
+| Model | Tier | Notes |
+|-------|------|-------|
+| `mistral-large-3-25-12` | Large | Flagship, recommended — open-weight, multimodal |
+| `mistral-medium-3-1-25-08` | Medium | Frontier-class multimodal |
+| `mistral-small-4-0-26-03` | Small | Cheaper/faster option |
 
-> **Privacy note:** The Experiment plan requires opting into data training. If this is a concern, consider upgrading to a paid Mistral plan or relying on Cerebras alone.
+> **Note:** `mistral-large-latest` is not a documented alias. Pin to a versioned ID like `mistral-large-3-25-12`. **Privacy note:** The Experiment plan requires opting into data training. If this is a concern, consider upgrading to a paid Mistral plan.
 
 ---
 
@@ -61,15 +63,26 @@ Step-by-step guide to adding Mistral as a secondary AI inference fallback for th
 
 ---
 
-## Step 4 — Verify
+## Step 4 — Set the Model Variable
+
+Pin to a versioned model ID to avoid breakage from undocumented alias changes:
+
+```bash
+gh variable set MISTRAL_MODEL --body "mistral-large-3-25-12" --repo pantheon-org/mneme
+```
+
+Or via **Settings > Variables > Actions > New repository variable**.
+
+---
+
+## Step 5 — Verify
 
 Mistral activates automatically once the secret is present. To confirm it is working:
 
-1. Force both Gemini and Cerebras to fail (e.g. provide invalid keys temporarily).
-2. Trigger a triage, assess, or review workflow.
-3. The resulting GitHub comment footer will read `(mistral)`.
+1. Trigger a triage, assess, or review workflow (e.g. open an issue).
+2. The resulting GitHub comment footer will include `(mistral)`.
 
-Alternatively, check the workflow run logs — the fallback step will print `Mistral succeeded.` to stderr.
+Alternatively, check the workflow run logs — the dispatch step logs `[ai-run] backend_used=mistral`.
 
 ---
 
@@ -79,13 +92,22 @@ Alternatively, check the workflow run logs — the fallback step will print `Mis
 
 | Secret | Required | Purpose |
 |--------|----------|---------|
-| `MISTRAL_API_KEY` | No (secondary fallback only) | Authenticates with the Mistral La Plateforme API |
+| `MISTRAL_API_KEY` | Yes (to use Mistral) | Authenticates with the Mistral La Plateforme API |
+
+### Variables
+
+| Variable | Recommended value | Purpose |
+|----------|-------------------|---------|
+| `MISTRAL_MODEL` | `mistral-large-3-25-12` | Model to use for inference |
+| `AI_PROVIDER_ORDER` | `cerebras,gemini,anthropic,mistral` | Controls provider priority |
 
 ### Behaviour
 
-- Mistral is only invoked when both Gemini and Cerebras have failed or are not configured.
-- The fallback order is: **Gemini → Cerebras → Mistral**.
-- If no fallback key succeeds, the workflow step exits without posting a comment. The run itself does not fail.
+- Mistral is invoked when it appears in `AI_PROVIDER_ORDER` and `MISTRAL_API_KEY` is set.
+- If the call fails, the next provider in `AI_PROVIDER_ORDER` is tried.
+- If no provider succeeds, the workflow step exits with failure.
+
+See [configuration.md](../configuration.md) for all available variables.
 
 ---
 
@@ -93,7 +115,8 @@ Alternatively, check the workflow run logs — the fallback step will print `Mis
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| Fallback step skipped silently | `MISTRAL_API_KEY` secret not set | Add the secret (Step 3) |
-| `HTTP 401` in fallback step logs | API key invalid or revoked | Generate a new key at console.mistral.ai |
-| `HTTP 402` or billing error | Experiment plan exhausted | Check token usage at console.mistral.ai; 1B tokens/month is shared across all calls |
-| Phone verification loop | Account not fully verified | Complete phone verification at console.mistral.ai before generating a key |
+| `[ai-run] skipping mistral: no API key` | `MISTRAL_API_KEY` secret not set | Add the secret (Step 3) |
+| `Mistral HTTP 401` in logs | API key invalid or revoked | Generate a new key at console.mistral.ai |
+| `Mistral HTTP 402` or billing error | Experiment plan exhausted | Check token usage at console.mistral.ai |
+| `Mistral HTTP 404` in logs | Model not found | Set `MISTRAL_MODEL` to a valid versioned ID (Step 4) |
+| Phone verification loop | Account not fully verified | Complete phone verification at console.mistral.ai |

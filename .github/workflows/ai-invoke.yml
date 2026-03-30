@@ -52,17 +52,35 @@ jobs:
       - name: 'Authenticate GitHub CLI'
         run: 'echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token'
 
+      - name: 'Fetch issue'
+        id: 'issue'
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
+        env:
+          ISSUE_NUMBER: '${{ inputs.issue_number || github.event.issue.number }}'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |-
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            if (!issueNumber) { core.setOutput('title', ''); core.setOutput('body', ''); return; }
+            const { data } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+            core.setOutput('title', data.title);
+            core.setOutput('body', data.body || '');
+
       - name: 'Build prompt'
         id: 'build-prompt'
         uses: './.github/actions/build-prompt'
         with:
           workflow:           'invoke'
-          trigger:            '${{ inputs.trigger }}'
+          trigger:            '${{ inputs.trigger || ''comment'' }}'
           issue_number:       '${{ inputs.issue_number || github.event.pull_request.number || github.event.issue.number }}'
           repository:         '${{ github.repository }}'
           additional_context: '${{ inputs.additional_context }}'
           event_name:         '${{ github.event_name }}'
-          title:              '${{ github.event.pull_request.title || github.event.issue.title }}'
+          title:              '${{ steps.issue.outputs.title || github.event.pull_request.title }}'
 
       - name: 'Run AI'
         id: 'ai'
@@ -78,6 +96,25 @@ jobs:
           cerebras_model:     '${{ vars.CEREBRAS_MODEL || ''gpt-oss-120b'' }}'
           mistral_api_key:    '${{ secrets.MISTRAL_API_KEY }}'
           mistral_model:      '${{ vars.MISTRAL_MODEL || ''mistral-large-latest'' }}'
+
+      - name: 'Post comment'
+        if: "steps.ai.outcome == 'success'"
+        uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8
+        env:
+          SUMMARY:      '${{ steps.ai.outputs.summary }}'
+          BACKEND:      '${{ steps.ai.outputs.backend_used }}'
+          ISSUE_NUMBER: '${{ inputs.issue_number || github.event.issue.number }}'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |-
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            if (!issueNumber) return;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `${process.env.SUMMARY}\n\n---\n*${process.env.BACKEND}*`,
+            });
 
       - name: 'Write job summary'
         if: always()

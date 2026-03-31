@@ -19,12 +19,12 @@ on:
         required: false
       trigger:
         type: 'string'
-        description: "'comment' for ad-hoc @gemini-cli requests, 'implement' for priority queue"
+        description: "'comment' for ad-hoc @gemini-cli requests, 'plan' for priority queue"
         required: false
         default: 'comment'
       issue_number:
         type: 'string'
-        description: 'Issue number to implement (implement trigger only; overrides event context)'
+        description: 'Issue number to plan (plan trigger only; overrides event context)'
         required: false
 
 concurrency:

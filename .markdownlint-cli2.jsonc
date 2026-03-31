@@ -21,6 +21,6 @@
     ".context/**",
     ".claude/**",
     ".opencode/**",
-    "vault-core/skills/**"
+    "**/skills/**"
   ]
 }

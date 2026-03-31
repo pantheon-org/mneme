@@ -103,6 +103,7 @@ export class ApprovalInterface {
   private markSuperseded(id: string, now: string): void {
     this.db.updateStatus(id, "superseded");
     const memory = this.db.getById(id);
+    if (memory?.humanEditedAt) return;
     if (memory?.filePath) {
       const raw = readFileSync(memory.filePath, "utf-8");
       const patched = raw.replace(/^(status:\s*)active$/m, "$1superseded");

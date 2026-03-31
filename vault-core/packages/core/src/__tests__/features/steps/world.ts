@@ -3,11 +3,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setWorldConstructor, World } from "@cucumber/cucumber";
 import type { Memory } from "@vault-core/types";
+import type { VaultReader } from "../../../storage/vault-reader.js";
+import type { VaultWriter } from "../../../storage/vault-writer.js";
 
 export class VaultWorld extends World {
   tmpDir: string = "";
   vaultPath: string = "";
   indexPath: string = "";
+
+  t03Writer: VaultWriter | null = null;
+  t03Reader: VaultReader | null = null;
+  t03FilePath: string = "";
 
   lastReadMemory: Memory | null = null;
   searchResults: Memory[] = [];

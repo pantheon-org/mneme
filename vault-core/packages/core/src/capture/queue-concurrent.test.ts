@@ -69,7 +69,7 @@ describe("CaptureQueue concurrent writes", () => {
 
     for (const input of inputs) queue.capture(input);
 
-    await new Promise<void>((resolve) => setTimeout(resolve, 200));
+    await queue.flush();
 
     const raw = readFileSync(PENDING_PATH, "utf-8");
     const lines = raw.split("\n").filter(Boolean);

@@ -14,3 +14,8 @@ Feature: Human Edit Immunity
     When the vault file is modified externally
     And the memory is read once to detect the edit
     Then reading the memory again returns the same humanEditedAt value
+
+  Scenario: applyApproved skips vault file patch for human-edited source memory
+    Given a human-edited memory stored in the vault and index
+    When applyApproved is called for a proposal referencing that memory
+    Then the vault file for the human-edited memory is not modified

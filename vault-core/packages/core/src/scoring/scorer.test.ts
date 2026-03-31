@@ -47,18 +47,25 @@ describe("Scorer", () => {
       expect(result?.recency).toBe(0.5);
     });
 
-    it("recency decays based on age of existing similar memory", async () => {
-      const oldCapturedAt = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-      const db = makeStubDb({
-        bm25Search: () => [{ id: "old-mem" }] as ReturnType<IndexDB["bm25Search"]>,
+    const makeDbWithMemoryAge = (ageMs: number) => {
+      const capturedAt = new Date(Date.now() - ageMs).toISOString();
+      return makeStubDb({
+        bm25Search: () => [{ id: "m" }] as ReturnType<IndexDB["bm25Search"]>,
         getById: () =>
-          ({ id: "old-mem", capturedAt: oldCapturedAt, frequencyCount: 1 }) as ReturnType<
-            IndexDB["getById"]
-          >,
+          ({ id: "m", capturedAt, frequencyCount: 1 }) as ReturnType<IndexDB["getById"]>,
       });
-      const scorer = new Scorer(db, makeStubEmbedder());
+    };
+
+    it("recency decays based on age of existing similar memory", async () => {
+      const scorer = new Scorer(makeDbWithMemoryAge(14 * 24 * 60 * 60 * 1000), makeStubEmbedder());
       const result = await scorer.score(makeCandidate());
       expect(result?.recency).toBeLessThan(0.2);
+    });
+
+    it("recency is close to 1.0 when a similar memory was seen very recently", async () => {
+      const scorer = new Scorer(makeDbWithMemoryAge(60 * 60 * 1000), makeStubEmbedder());
+      const result = await scorer.score(makeCandidate());
+      expect(result?.recency).toBeGreaterThan(0.99);
     });
 
     it("importance is capped at 1.0 regardless of signal count", async () => {

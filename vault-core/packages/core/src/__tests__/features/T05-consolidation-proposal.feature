@@ -19,3 +19,5 @@ Feature: Consolidation Proposal
     Given a vault inbox with an existing consolidation proposal
     When the ApprovalInterface renders a second proposal
     Then the vault inbox file contains 2 proposal blocks
+    And the first proposal block has id "prop_existing_001"
+    And the second proposal block has id "prop_new_002"

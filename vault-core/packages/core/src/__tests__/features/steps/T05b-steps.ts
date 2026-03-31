@@ -50,14 +50,32 @@ When("the ApprovalInterface renders a second proposal", function (this: VaultWor
   db.close();
 });
 
+const readProposalBlocks = (vaultPath: string): string[] => {
+  const filePath = join(vaultPath, "00-inbox", "consolidation-proposals.md");
+  if (!existsSync(filePath)) throw new Error("consolidation-proposals.md not found");
+  return readFileSync(filePath, "utf-8").split("\n---separator---\n").filter(Boolean);
+};
+
 Then(
   "the vault inbox file contains {int} proposal blocks",
   function (this: VaultWorld, count: number) {
-    const filePath = join(this.vaultPath, "00-inbox", "consolidation-proposals.md");
-    if (!existsSync(filePath)) throw new Error("consolidation-proposals.md not found");
-    const blocks = readFileSync(filePath, "utf-8").split("\n---separator---\n").filter(Boolean);
+    const blocks = readProposalBlocks(this.vaultPath);
     if (blocks.length !== count) {
       throw new Error(`Expected ${count} proposal blocks but found ${blocks.length}`);
     }
   },
 );
+
+Then("the first proposal block has id {string}", function (this: VaultWorld, id: string) {
+  const blocks = readProposalBlocks(this.vaultPath);
+  if (!blocks[0]?.includes(`proposal_id: ${id}`)) {
+    throw new Error(`Expected first block to have id "${id}"`);
+  }
+});
+
+Then("the second proposal block has id {string}", function (this: VaultWorld, id: string) {
+  const blocks = readProposalBlocks(this.vaultPath);
+  if (!blocks[1]?.includes(`proposal_id: ${id}`)) {
+    throw new Error(`Expected second block to have id "${id}"`);
+  }
+});

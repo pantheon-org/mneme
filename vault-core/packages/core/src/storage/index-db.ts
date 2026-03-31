@@ -115,6 +115,9 @@ export class IndexDB {
   allIds(): string[] {
     return (this.db.prepare("SELECT id FROM memories").all() as { id: string }[]).map((r) => r.id);
   }
+  rowCount(): number {
+    return (this.db.prepare("SELECT COUNT(*) as n FROM memories").get() as { n: number }).n;
+  }
   close(): void {
     this.db.close();
   }

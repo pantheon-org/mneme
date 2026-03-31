@@ -280,3 +280,22 @@ index. Memories with `human_edited_at` set are never overwritten by automated re
 5. Ebbinghaus decay applies only to episodic tier — never semantic or procedural
 6. Vector search is optional — all paths degrade gracefully to BM25-only
 7. Injection respects token budget — never truncates mid-note
+
+## Crash recovery
+
+The capture pipeline writes to the vault first (`VaultWriter.write`) then to SQLite (`IndexDB.upsert`). These two operations are not wrapped in a single transaction, so a crash between them leaves the vault and SQLite index diverged.
+
+**Recovery mechanism:** `reconcile(db, reader, vaultPath)` scans the three tier directories (`01-episodic/`, `02-semantic/`, `03-procedural/`) for `.md` files and performs two operations:
+
+- **Insert** rows for vault files that have no corresponding SQLite row (by `id`)
+- **Delete** SQLite rows whose `file_path` no longer exists on disk (orphaned rows)
+
+It returns `{ inserted: number, deleted: number }`. `reconcile` is called automatically on VaultCore initialisation (in both the CLI core loader and the hook core loader). It can also be triggered manually via `vault-cli index`.
+
+**Recovery procedure (manual):**
+
+```bash
+vault-cli index
+```
+
+This command reads every `.md` file under `vault_path`, upserts each into SQLite, and removes rows whose corresponding vault file has been deleted. Both insert and delete counts are logged.

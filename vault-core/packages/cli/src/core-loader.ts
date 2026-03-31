@@ -11,6 +11,7 @@ import {
   Injector,
   loadConfig,
   Proposer,
+  reconcile,
   Scorer,
   VaultReader,
   VaultWriter,
@@ -49,5 +50,6 @@ export const loadVaultCore = (): VaultCore => {
   const proposer = new Proposer(db, adjudicator, queuePath);
   const approval = new ApprovalInterface(vaultPath, writer, db, audit);
 
+  reconcile(db, reader, vaultPath);
   return { writer, reader, db, audit, queue, retriever, injector, proposer, approval };
 };

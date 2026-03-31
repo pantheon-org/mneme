@@ -17,5 +17,6 @@ export { DEFAULT_WEIGHTS, Scorer } from "./scoring/scorer.js";
 export { AuditLog } from "./storage/audit-log.js";
 export type { BM25Result, VecResult } from "./storage/index-db.js";
 export { IndexDB } from "./storage/index-db.js";
+export { reconcile } from "./storage/index-db-reconcile.js";
 export { VaultReader } from "./storage/vault-reader.js";
 export { VaultWriter } from "./storage/vault-writer.js";

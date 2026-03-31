@@ -45,7 +45,7 @@ export const loadVaultCore = (): VaultCore => {
   const queue = new CaptureQueue(sweep, embedder, scorer, writer, db, audit);
   const retriever = new HybridRetriever(db, embedder);
   const injector = new Injector();
-  const adjudicator = new Adjudicator(config.inference_command, audit);
+  const adjudicator = new Adjudicator(config.inference_command, audit, config.inference_timeout_ms);
   const proposer = new Proposer(db, adjudicator, queuePath);
   const approval = new ApprovalInterface(vaultPath, writer, db, audit);
 

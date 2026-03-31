@@ -13,6 +13,7 @@ export interface VaultCoreConfig {
   index_path: string;
   harness: string;
   inference_command: string;
+  inference_timeout_ms?: number;
   embedding_model: string;
   capture_threshold: number;
   top_k_retrieval: number;

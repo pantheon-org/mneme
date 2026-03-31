@@ -2,18 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
 import type { AuditLog } from "../storage/audit-log.js";
 import type { ConsolidationProposal } from "./consolidation-proposal.js";
+import { parseCommand } from "./parse-command.js";
 import { validCategory, validScope } from "./validation-helpers.js";
-
-const parseCommand = (cmd: string): string[] => {
-  const result: string[] = [];
-  const re = /(?:"([^"]*)")|(?:'([^']*)')|(\S+)/g;
-  for (;;) {
-    const m = re.exec(cmd);
-    if (m === null) break;
-    result.push(m[1] ?? m[2] ?? m[3] ?? "");
-  }
-  return result;
-};
 
 export interface ConflictResolution {
   action: "keep_existing" | "keep_incoming" | "merge";
@@ -35,10 +25,13 @@ interface ConflictResult {
   mergedContent?: string;
 }
 
+const INFERENCE_TIMEOUT_MS = 30_000;
+
 export class Adjudicator {
   constructor(
     private readonly inferenceCommand: string,
     private readonly audit: AuditLog,
+    private readonly timeoutMs: number = INFERENCE_TIMEOUT_MS,
   ) {}
 
   async resolveConflict(existing: Memory, incoming: Memory): Promise<ConflictResolution> {
@@ -112,7 +105,20 @@ export class Adjudicator {
         stdout: "pipe",
         stderr: "ignore",
       });
-      const stdout = await new Response(proc.stdout).text();
+      let timerId: Timer;
+      const timeout = new Promise<never>((_, reject) => {
+        timerId = setTimeout(() => reject(new Error("inference timeout")), this.timeoutMs);
+      });
+      let stdout: string;
+      try {
+        stdout = await Promise.race([
+          new Response(proc.stdout).text().finally(() => clearTimeout(timerId)),
+          timeout,
+        ]);
+      } catch {
+        proc.kill();
+        return {};
+      }
       const exit = await proc.exited;
       if (exit !== 0) return {};
       return JSON.parse(stdout.trim()) as Record<string, unknown>;

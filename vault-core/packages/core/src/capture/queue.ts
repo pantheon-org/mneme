@@ -51,6 +51,7 @@ export class CaptureQueue {
     const recoveryPath = `${PENDING_PATH}.recovering`;
     if (existsSync(recoveryPath)) {
       this.replayFromFile(recoveryPath);
+      unlinkSync(recoveryPath);
     }
     if (!existsSync(PENDING_PATH)) return;
     renameSync(PENDING_PATH, recoveryPath);

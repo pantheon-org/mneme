@@ -38,3 +38,8 @@ pre-push:
         - "vault-core/packages/core/src/__tests__/features/steps/**/*.ts"
       root: vault-core
       run: bun run test:bdd
+
+    - name: semgrep
+      glob: "vault-core/packages/**/*.{ts,js}"
+      run: semgrep --config=p/typescript --config=p/javascript --config=p/nodejsscan --config=p/owasp-top-ten vault-core/packages/
+      fail_text: "semgrep found security issues"

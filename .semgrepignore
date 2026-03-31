@@ -1,0 +1,5 @@
+vault-core/dist
+vault-core/node_modules
+**/*.test.ts
+.tessl
+.context

@@ -66,3 +66,15 @@ jobs:
 
       - name: Run unit tests
         run: bun test --coverage
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Semgrep
+        run: pip install semgrep==1.156.0
+
+      - name: Semgrep scan
+        run: semgrep --config=p/typescript --config=p/javascript --config=p/nodejsscan --config=p/owasp-top-ten packages/

@@ -1,0 +1,4 @@
+vault-core/dist
+vault-core/node_modules
+.tessl
+.context

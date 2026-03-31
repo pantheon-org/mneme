@@ -37,11 +37,11 @@ jobs:
         id: 'pick'
         uses: './.github/actions/select-issue'
 
-  implement:
+  plan:
     needs: 'select'
     if: "needs.select.outputs.issue_number != ''"
     uses: './.github/workflows/ai-invoke.yml'
     secrets: 'inherit'
     with:
-      trigger: 'implement'
+      trigger: 'plan'
       issue_number: '${{ needs.select.outputs.issue_number }}'

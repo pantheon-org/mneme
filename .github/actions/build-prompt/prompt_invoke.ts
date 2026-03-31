@@ -8,38 +8,32 @@ const additionalContext = env.ADDITIONAL_CONTEXT ?? "";
 const eventName = env.EVENT_NAME ?? "";
 const title = env.TITLE ?? "";
 
-const implementSection = `── IF TRIGGER IS "implement" ────────────────────────────────────────────────
+const planSection = `── IF TRIGGER IS "plan" ─────────────────────────────────────────────────────
 
-A GitHub issue has been assessed as ready to work on. Implement a full solution:
+A GitHub issue has been assessed as ready to work on. Produce a structured
+implementation plan and post it as a comment on the issue.
 
-1. Read the issue in full — do not rely on any injected content:
-   gh issue view ${issueNumber} --repo ${repository}
+Your plan must cover:
 
-2. Create a feature branch:
-   git checkout -b <type>/${issueNumber}-<slug>
-   Use 'fix' for bugs, 'feat' for enhancements. Slug is short kebab-case.
+1. **Branch name** — conventional format: <type>/${issueNumber}-<slug>
+   Use 'fix' for bugs, 'feat' for enhancements.
 
-3. Implement the change following all conventions in AGENTS.md.
-   After making changes, verify:
-   bun install
-   bun run typecheck
-   bun run test:bdd
-   Fix any failures before continuing.
+2. **Files to change** — list each file path and what needs to change in it.
+   Reference the package locations and key source files from AGENTS.md.
 
-4. Commit with a conventional commit message and push:
-   git add -A
-   git commit -m "<type>(<scope>): <subject>"
-   git push -u origin HEAD
+3. **Approach** — a short prose summary of the solution strategy, including
+   any trade-offs or design decisions worth flagging.
 
-5. Open a pull request:
-   gh pr create \\
-     --title "<conventional title>" \\
-     --body "$(printf 'Summary\\n\\nCloses #%s' ${issueNumber})"
+4. **Step-by-step** — ordered list of concrete implementation steps a
+   developer (or future agentic runner) can follow.
 
-6. Swap the issue labels:
-   gh issue edit ${issueNumber} \\
-     --add-label "status: wip" \\
-     --remove-label "status: ready"`;
+5. **Tests** — which existing feature files are affected, and whether a new
+   T<nn>-*.feature file is needed.
+
+6. **Out of scope** — anything the issue mentions that should NOT be tackled
+   in this PR.
+
+Do not execute any commands. Output only the plan as markdown.`;
 
 const commentSection = `── IF TRIGGER IS "comment" ──────────────────────────────────────────────────
 
@@ -67,7 +61,7 @@ Consult AGENTS.md for all conventions before making any changes.
 
 Your trigger mode is: ${trigger}
 
-${implementSection}
+${planSection}
 
 ${commentSection}`;
 

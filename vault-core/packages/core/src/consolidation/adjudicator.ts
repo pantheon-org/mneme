@@ -35,10 +35,13 @@ interface ConflictResult {
   mergedContent?: string;
 }
 
+const INFERENCE_TIMEOUT_MS = 30_000;
+
 export class Adjudicator {
   constructor(
     private readonly inferenceCommand: string,
     private readonly audit: AuditLog,
+    private readonly timeoutMs: number = INFERENCE_TIMEOUT_MS,
   ) {}
 
   async resolveConflict(existing: Memory, incoming: Memory): Promise<ConflictResolution> {
@@ -112,7 +115,13 @@ export class Adjudicator {
         stdout: "pipe",
         stderr: "ignore",
       });
-      const stdout = await new Response(proc.stdout).text();
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => {
+          proc.kill();
+          reject(new Error("inference timeout"));
+        }, this.timeoutMs),
+      );
+      const stdout = await Promise.race([new Response(proc.stdout).text(), timeout]);
       const exit = await proc.exited;
       if (exit !== 0) return {};
       return JSON.parse(stdout.trim()) as Record<string, unknown>;

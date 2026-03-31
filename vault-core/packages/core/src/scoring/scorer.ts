@@ -22,10 +22,7 @@ export class Scorer {
     private readonly threshold: number = 0.45,
   ) {}
 
-  async score(candidate: MemoryCandidate, capturedAt: string): Promise<ImportanceScore | null> {
-    const elapsed = Date.now() - Date.parse(capturedAt);
-    const recency = Math.exp(-elapsed / SEVEN_DAYS_MS);
-
+  async score(candidate: MemoryCandidate): Promise<ImportanceScore | null> {
     const importanceRaw = candidate.signals.reduce((acc, s, i) => {
       return acc + s.confidence * 0.8 ** i;
     }, 0);
@@ -55,6 +52,10 @@ export class Scorer {
     const existingMemory = existingId ? this.db.getById(existingId) : null;
     const rawFrequency = existingMemory ? existingMemory.frequencyCount : 0;
     const frequency = Math.min(rawFrequency / 10, 1.0);
+
+    const lastSeenMs = existingMemory ? Date.parse(existingMemory.capturedAt) : null;
+    const recency =
+      lastSeenMs !== null ? Math.exp(-(Date.now() - lastSeenMs) / SEVEN_DAYS_MS) : 0.5;
 
     const interference = novelty < 0.3 ? 1.0 - novelty : 0;
 

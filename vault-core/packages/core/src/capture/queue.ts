@@ -73,7 +73,7 @@ export class CaptureQueue {
         } catch {}
 
         const capturedAt = input.enqueuedAt ?? new Date().toISOString();
-        const scored = await this.scorer.score(candidate, capturedAt);
+        const scored = await this.scorer.score(candidate);
         if (scored === null) continue;
 
         const memory = buildMemory(candidate.input, scored.composite, embedding);

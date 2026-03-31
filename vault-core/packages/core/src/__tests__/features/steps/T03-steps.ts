@@ -1,4 +1,4 @@
-import { appendFileSync, utimesSync } from "node:fs";
+import { appendFileSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { After, Before, Given, Then, When } from "@cucumber/cucumber";
 import { VaultReader } from "../../../storage/vault-reader.js";
 import { VaultWriter } from "../../../storage/vault-writer.js";
@@ -86,3 +86,39 @@ Then("reading the memory again returns the same humanEditedAt value", function (
     throw new Error(`humanEditedAt changed: ${this.firstHumanEditedAt} !== ${read2.humanEditedAt}`);
   }
 });
+
+When(
+  "the memory is read once so humanEditedAt is detected and persisted",
+  function (this: VaultWorld) {
+    const read = t03Reader.read(t03FilePath);
+    this.firstHumanEditedAt = read.humanEditedAt ?? null;
+    if (this.firstHumanEditedAt === null) {
+      throw new Error("Expected humanEditedAt to be detected after external edit");
+    }
+  },
+);
+
+When(
+  "the memory is re-written by another session with an older mtime",
+  function (this: VaultWorld) {
+    const raw = readFileSync(t03FilePath, "utf-8");
+    const stat = statSync(t03FilePath);
+    const tmp = `${t03FilePath}.tmp2`;
+    writeFileSync(tmp, raw, "utf-8");
+    utimesSync(tmp, stat.atime, new Date(stat.mtimeMs - 10_000));
+    writeFileSync(t03FilePath, raw, "utf-8");
+    utimesSync(t03FilePath, stat.atime, new Date(stat.mtimeMs - 10_000));
+  },
+);
+
+Then(
+  "reading the memory again still returns the original humanEditedAt value",
+  function (this: VaultWorld) {
+    const read = t03Reader.read(t03FilePath);
+    if (read.humanEditedAt !== this.firstHumanEditedAt) {
+      throw new Error(
+        `humanEditedAt changed after re-write: expected ${this.firstHumanEditedAt}, got ${read.humanEditedAt}`,
+      );
+    }
+  },
+);

@@ -21,3 +21,9 @@ Feature: Consolidation Proposal
     Then the vault inbox file contains 2 proposal blocks
     And the first proposal block has id "prop_existing_001"
     And the second proposal block has id "prop_new_002"
+
+  Scenario: Proposer skips clusters where adjudicator returns null
+    Given episodic memories prepared for null-adjudicator testing
+    When the Proposer runs with an adjudicator that returns null for every cluster
+    Then the proposal run completes without error
+    And zero proposals are returned

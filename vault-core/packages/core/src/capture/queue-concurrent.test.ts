@@ -1,64 +1,53 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { CaptureInput } from "@vault-core/types";
-
-const PENDING_PATH = join(homedir(), ".vault-core", "pending.jsonl");
-const VAULT_CORE_DIR = join(homedir(), ".vault-core");
+import { CaptureQueue } from "./queue.js";
 
 const noop = () => undefined;
 
 const makeFakeDeps = () => ({
-  sweep: { scan: mock(() => []) },
-  embedder: { embed: mock(async () => [[]]), dimensions: 4 },
-  scorer: { score: mock(async () => null) },
-  writer: {
-    resolveFilePath: mock(() => "/tmp/fake.md"),
-    write: mock(noop),
-  },
+  sweep: { scan: () => [] },
+  embedder: { embed: async () => [[]] as number[][], dimensions: 4 },
+  scorer: { score: async () => null },
+  writer: { resolveFilePath: () => "/tmp/fake.md", write: noop },
   db: {
-    upsert: mock(noop),
-    upsertVector: mock(noop),
-    getByIds: mock(() => []),
-    bm25Search: mock(() => []),
-    knnSearch: mock(() => []),
-    getByTier: mock(() => []),
+    upsert: noop,
+    upsertVector: noop,
+    getByIds: () => [],
+    bm25Search: () => [],
+    knnSearch: () => [],
+    getByTier: () => [],
   },
-  audit: { append: mock(noop) },
+  audit: { append: noop },
 });
 
 describe("CaptureQueue concurrent writes", () => {
-  let originalContent: string | null = null;
+  let tmpDir: string;
+  let pendingPath: string;
+  let queue: CaptureQueue;
 
   beforeEach(() => {
-    mkdirSync(VAULT_CORE_DIR, { recursive: true });
-    if (existsSync(PENDING_PATH)) {
-      originalContent = readFileSync(PENDING_PATH, "utf-8");
-    } else {
-      originalContent = null;
-    }
-    writeFileSync(PENDING_PATH, "", "utf-8");
+    tmpDir = mkdtempSync(join(tmpdir(), "queue-test-"));
+    pendingPath = join(tmpDir, "pending.jsonl");
   });
 
   afterEach(() => {
-    if (originalContent !== null) {
-      writeFileSync(PENDING_PATH, originalContent, "utf-8");
-    } else if (existsSync(PENDING_PATH)) {
-      rmSync(PENDING_PATH);
-    }
+    queue.destroy();
+    rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("does not interleave JSONL lines when capture() is called concurrently", async () => {
-    const { CaptureQueue } = await import("./queue.js");
+  it("does not interleave JSONL lines when capture() is called concurrently", () => {
     const deps = makeFakeDeps();
-    const queue = new CaptureQueue(
+    queue = new CaptureQueue(
       deps.sweep as never,
       deps.embedder as never,
       deps.scorer as never,
       deps.writer as never,
       deps.db as never,
       deps.audit as never,
+      pendingPath,
     );
 
     const concurrency = 20;
@@ -69,9 +58,7 @@ describe("CaptureQueue concurrent writes", () => {
 
     for (const input of inputs) queue.capture(input);
 
-    await new Promise<void>((resolve) => setTimeout(resolve, 200));
-
-    const raw = readFileSync(PENDING_PATH, "utf-8");
+    const raw = readFileSync(pendingPath, "utf-8");
     const lines = raw.split("\n").filter(Boolean);
 
     expect(lines.length).toBe(concurrency);

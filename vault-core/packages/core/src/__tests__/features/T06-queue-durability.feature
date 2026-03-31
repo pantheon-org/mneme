@@ -14,3 +14,9 @@ Feature: Queue Durability
     Given a pending.jsonl file with 1 valid entry, 1 malformed entry, and 1 valid entry
     When the file is parsed skipping malformed lines
     Then exactly 2 entries are successfully parsed
+
+  Scenario: Crash mid-replay is recovered on next startup
+    Given a pending.jsonl.recovering file with 5 capture entries
+    When replayPending is called with no pending.jsonl present
+    Then all 5 entries are in the queue
+    And the recovering file is removed

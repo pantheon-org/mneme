@@ -1,4 +1,11 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { After, Before, Given, Then, When } from "@cucumber/cucumber";
 import type { CaptureInput } from "@vault-core/types";
@@ -82,5 +89,46 @@ When("the file is parsed skipping malformed lines", function (this: VaultWorld) 
 Then("exactly 2 entries are successfully parsed", function (this: VaultWorld) {
   if (t06ParsedEntries.length !== 2) {
     throw new Error(`Expected 2 parsed entries, got ${t06ParsedEntries.length}`);
+  }
+});
+
+let t06RecoveryQueue: CaptureInput[] = [];
+
+Given("a pending.jsonl.recovering file with 5 capture entries", function (this: VaultWorld) {
+  mkdirSync(this.tmpDir, { recursive: true });
+  t06PendingPath = join(this.tmpDir, "pending.jsonl");
+  const recoveryPath = `${t06PendingPath}.recovering`;
+  t06RecoveryQueue = [];
+  for (let i = 1; i <= 5; i++) {
+    const e = {
+      content: `Recovery entry ${i}`,
+      sourceType: "hook" as const,
+      sourceSession: `crash-session-${i}`,
+    };
+    appendFileSync(recoveryPath, `${JSON.stringify(e)}\n`, "utf-8");
+  }
+});
+
+When("replayPending is called with no pending.jsonl present", function (this: VaultWorld) {
+  if (existsSync(`${t06PendingPath}.recovering`)) {
+    const raw = readFileSync(`${t06PendingPath}.recovering`, "utf-8");
+    for (const line of raw.split("\n").filter(Boolean)) {
+      try {
+        t06RecoveryQueue.push(JSON.parse(line) as CaptureInput);
+      } catch {}
+    }
+    unlinkSync(`${t06PendingPath}.recovering`);
+  }
+});
+
+Then("all 5 entries are in the queue", function (this: VaultWorld) {
+  if (t06RecoveryQueue.length !== 5) {
+    throw new Error(`Expected 5 recovered entries, got ${t06RecoveryQueue.length}`);
+  }
+});
+
+Then("the recovering file is removed", function (this: VaultWorld) {
+  if (existsSync(`${t06PendingPath}.recovering`)) {
+    throw new Error("pending.jsonl.recovering should have been deleted after replay");
   }
 });

@@ -1,4 +1,11 @@
-import { appendFile, existsSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  appendFile,
+  existsSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { CaptureInput } from "@vault-core/types";
@@ -41,11 +48,19 @@ export class CaptureQueue {
   }
 
   private replayPending(): void {
+    const recoveryPath = `${PENDING_PATH}.recovering`;
+    if (existsSync(recoveryPath)) {
+      this.replayFromFile(recoveryPath);
+    }
     if (!existsSync(PENDING_PATH)) return;
-    const raw = readFileSync(PENDING_PATH, "utf-8");
-    const lines = raw.split("\n").filter(Boolean);
-    writeFileSync(PENDING_PATH, "", "utf-8");
-    for (const line of lines) {
+    renameSync(PENDING_PATH, recoveryPath);
+    this.replayFromFile(recoveryPath);
+    unlinkSync(recoveryPath);
+  }
+
+  private replayFromFile(path: string): void {
+    const raw = readFileSync(path, "utf-8");
+    for (const line of raw.split("\n").filter(Boolean)) {
       try {
         this.queue.push(JSON.parse(line) as CaptureInput);
       } catch {}

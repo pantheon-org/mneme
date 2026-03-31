@@ -1,22 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { CaptureInput } from "@vault-core/types";
-import type { Embedder } from "../scoring/embedder.js";
-import type { Scorer } from "../scoring/scorer.js";
-import type { AuditLog } from "../storage/audit-log.js";
-import type { IndexDB } from "../storage/index-db.js";
-import type { VaultWriter } from "../storage/vault-writer.js";
-import type { ContextSweep } from "./sweep.js";
-
-mock.module("node:fs", () => ({
-  appendFile: mock((_p: unknown, _d: unknown, _e: unknown, cb: () => void) => cb()),
-  existsSync: mock(() => false),
-  readFileSync: mock(() => ""),
-  renameSync: mock(() => undefined),
-  unlinkSync: mock(() => undefined),
-  writeFileSync: mock(() => undefined),
-}));
-
-const { CaptureQueue } = await import("./queue.js");
+import { CaptureQueue } from "./queue.js";
 
 const makeInput = (): CaptureInput => ({
   content: "test content about a decision",
@@ -27,33 +14,45 @@ const makeInput = (): CaptureInput => ({
 
 const noop = () => undefined;
 
-const makeMocks = () => ({
-  sweep: { scan: mock(() => []) } as unknown as ContextSweep,
-  embedder: { embed: mock(async () => []) } as unknown as Embedder,
-  scorer: { score: mock(async () => null) } as unknown as Scorer,
-  writer: { resolveFilePath: mock(() => "/tmp/x.md"), write: mock(noop) } as unknown as VaultWriter,
-  db: { upsert: mock(noop), upsertVector: mock(noop) } as unknown as IndexDB,
-  audit: { append: mock(noop) } as unknown as AuditLog,
+const makeDeps = () => ({
+  sweep: { scan: () => [] },
+  embedder: { embed: async () => [] as number[][], dimensions: 4 },
+  scorer: { score: async () => null },
+  writer: { resolveFilePath: () => "/tmp/x.md", write: noop },
+  db: {
+    upsert: noop,
+    upsertVector: noop,
+    getByIds: () => [],
+    bm25Search: () => [],
+    knnSearch: () => [],
+    getByTier: () => [],
+  },
+  audit: { append: noop },
 });
 
 describe("CaptureQueue.flush()", () => {
-  let queue: InstanceType<typeof CaptureQueue>;
-  let mocks: ReturnType<typeof makeMocks>;
+  let tmpDir: string;
+  let pendingPath: string;
+  let queue: CaptureQueue;
 
   beforeEach(() => {
-    mocks = makeMocks();
+    tmpDir = mkdtempSync(join(tmpdir(), "queue-flush-test-"));
+    pendingPath = join(tmpDir, "pending.jsonl");
+    const deps = makeDeps();
     queue = new CaptureQueue(
-      mocks.sweep,
-      mocks.embedder,
-      mocks.scorer,
-      mocks.writer,
-      mocks.db,
-      mocks.audit,
+      deps.sweep as never,
+      deps.embedder as never,
+      deps.scorer as never,
+      deps.writer as never,
+      deps.db as never,
+      deps.audit as never,
+      pendingPath,
     );
   });
 
   afterEach(() => {
     queue.destroy();
+    rmSync(tmpDir, { recursive: true, force: true });
   });
 
   it("resolves immediately when queue is empty", async () => {

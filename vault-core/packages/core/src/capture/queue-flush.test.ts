@@ -5,8 +5,18 @@ import type { Scorer } from "../scoring/scorer.js";
 import type { AuditLog } from "../storage/audit-log.js";
 import type { IndexDB } from "../storage/index-db.js";
 import type { VaultWriter } from "../storage/vault-writer.js";
-import { CaptureQueue } from "./queue.js";
 import type { ContextSweep } from "./sweep.js";
+
+mock.module("node:fs", () => ({
+  appendFile: mock((_p: unknown, _d: unknown, _e: unknown, cb: () => void) => cb()),
+  existsSync: mock(() => false),
+  readFileSync: mock(() => ""),
+  renameSync: mock(() => undefined),
+  unlinkSync: mock(() => undefined),
+  writeFileSync: mock(() => undefined),
+}));
+
+const { CaptureQueue } = await import("./queue.js");
 
 const makeInput = (): CaptureInput => ({
   content: "test content about a decision",
@@ -27,7 +37,7 @@ const makeMocks = () => ({
 });
 
 describe("CaptureQueue.flush()", () => {
-  let queue: CaptureQueue;
+  let queue: InstanceType<typeof CaptureQueue>;
   let mocks: ReturnType<typeof makeMocks>;
 
   beforeEach(() => {
@@ -61,7 +71,6 @@ describe("CaptureQueue.flush()", () => {
     const internal = queue as unknown as Internal;
 
     internal.processing = true;
-
     queue.capture(makeInput());
 
     let backOffOccurred = false;

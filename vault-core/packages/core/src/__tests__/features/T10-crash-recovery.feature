@@ -20,3 +20,9 @@ Feature: Crash Recovery — vault is ground truth
     And the SQLite index is empty, simulating a crash after vault write but before DB upsert
     When vault-cli index rebuild is simulated via reconcile
     Then the memory is searchable in the SQLite index
+
+  Scenario: reconcile skips malformed vault files without crashing
+    Given a vault with one valid memory file and one malformed md file
+    When reconcile is called with the vault path
+    Then only the valid memory is present in the SQLite index
+    And reconcile returns a count of 1

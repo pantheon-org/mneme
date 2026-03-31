@@ -1,4 +1,5 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { After, Before, Given, Then, When } from "@cucumber/cucumber";
 import { IndexDB } from "../../../storage/index-db.js";
 import { reconcile } from "../../../storage/index-db-reconcile.js";
@@ -93,4 +94,25 @@ Then("the memory is searchable in the SQLite index", function (this: VaultWorld)
   if (!results.some((r) => r.id === this.lastReadMemory?.id)) {
     throw new Error(`Memory ${this.lastReadMemory.id} not found in BM25 results`);
   }
+});
+
+Given("a vault with one valid memory file and one malformed md file", function (this: VaultWorld) {
+  mkdirSync(this.vaultPath, { recursive: true });
+  const writer = new VaultWriter(this.vaultPath);
+  const mem = makeMemory({ summary: "valid memory for malformed test" });
+  mem.filePath = writer.resolveFilePath(mem);
+  writer.write(mem);
+  this.lastReadMemory = mem;
+  const badPath = join(this.vaultPath, "01-episodic", "not-valid.md");
+  writeFileSync(badPath, "no frontmatter here just garbage", "utf-8");
+});
+
+Then("only the valid memory is present in the SQLite index", function (this: VaultWorld) {
+  if (!this.lastReadMemory) throw new Error("No memory stored in world");
+  const db = new IndexDB(this.indexPath);
+  const found = db.getById(this.lastReadMemory.id);
+  const total = db.rowCount();
+  db.close();
+  if (found === null) throw new Error(`Valid memory ${this.lastReadMemory.id} not found in index`);
+  if (total !== 1) throw new Error(`Expected 1 row in index, got ${total}`);
 });

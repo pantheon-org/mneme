@@ -21,7 +21,11 @@ export class ApprovalInterface {
 
   renderProposals(proposals: ConsolidationProposal[]): void {
     if (proposals.length === 0) return;
-    const blocks = proposals.map((p) => {
+    const filePath = join(this.vaultPath, PROPOSALS_FILE);
+    const existingBlocks: string[] = existsSync(filePath)
+      ? readFileSync(filePath, "utf-8").split("\n---separator---\n").filter(Boolean)
+      : [];
+    const newBlocks = proposals.map((p) => {
       const fm = stringify({
         proposal_id: p.id,
         status: p.status,
@@ -33,9 +37,8 @@ export class ApprovalInterface {
       }).trimEnd();
       return `---\n${fm}\n---\n\n${p.proposedContent}\n`;
     });
-    const filePath = join(this.vaultPath, PROPOSALS_FILE);
     const tmp = `${filePath}.tmp`;
-    writeFileSync(tmp, blocks.join("\n---separator---\n"), "utf-8");
+    writeFileSync(tmp, [...existingBlocks, ...newBlocks].join("\n---separator---\n"), "utf-8");
     renameSync(tmp, filePath);
   }
 

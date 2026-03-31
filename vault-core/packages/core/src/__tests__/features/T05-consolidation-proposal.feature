@@ -14,3 +14,8 @@ Feature: Consolidation Proposal
     Given a consolidation proposal
     When the ApprovalInterface renders the proposal
     Then a "consolidation-proposals.md" file exists in the vault inbox
+
+  Scenario: renderProposals preserves existing proposals when called again
+    Given a vault inbox with an existing consolidation proposal
+    When the ApprovalInterface renders a second proposal
+    Then the vault inbox file contains 2 proposal blocks

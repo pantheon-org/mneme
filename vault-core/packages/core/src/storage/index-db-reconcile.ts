@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { IndexDB } from "./index-db.js";
 import type { VaultReader } from "./vault-reader.js";
@@ -18,12 +18,15 @@ const collectVaultFiles = (vaultPath: string): string[] => {
   return files;
 };
 
-export const reconcile = (db: IndexDB, reader: VaultReader, vaultPath: string): number => {
-  const files = collectVaultFiles(vaultPath);
-  const rowCount = db.rowCount();
-  if (files.length === rowCount) return 0;
+export const reconcile = (
+  db: IndexDB,
+  reader: VaultReader,
+  vaultPath: string,
+): { inserted: number; deleted: number } => {
+  const vaultFiles = new Set(collectVaultFiles(vaultPath));
+
   let inserted = 0;
-  for (const filePath of files) {
+  for (const filePath of vaultFiles) {
     try {
       const mem = reader.read(filePath);
       if (db.getById(mem.id) === null) {
@@ -32,5 +35,15 @@ export const reconcile = (db: IndexDB, reader: VaultReader, vaultPath: string): 
       }
     } catch {}
   }
-  return inserted;
+
+  let deleted = 0;
+  for (const id of db.allIds()) {
+    const mem = db.getById(id);
+    if (mem !== null && !existsSync(mem.filePath)) {
+      db.delete(id);
+      deleted++;
+    }
+  }
+
+  return { inserted, deleted };
 };

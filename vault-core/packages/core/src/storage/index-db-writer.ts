@@ -69,6 +69,3 @@ export const incrementFrequency = (db: Database, id: string): void => {
 export const updateStatus = (db: Database, id: string, status: MemoryStatus): void => {
   db.prepare("UPDATE memories SET status = ? WHERE id = ?").run(status, id);
 };
-
-export const rowCount = (db: Database): number =>
-  (db.prepare("SELECT COUNT(*) as n FROM memories").get() as { n: number }).n;

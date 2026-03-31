@@ -14,7 +14,7 @@ After({ tags: "@T10" }, function (this: VaultWorld) {
   this.cleanup();
 });
 
-let t10ReconcileCount = 0;
+let t10ReconcileResult: { inserted: number; deleted: number } = { inserted: 0, deleted: 0 };
 
 Given("a vault with one memory file and an empty SQLite index", function (this: VaultWorld) {
   mkdirSync(this.vaultPath, { recursive: true });
@@ -28,7 +28,7 @@ Given("a vault with one memory file and an empty SQLite index", function (this: 
 When("reconcile is called with the vault path", function (this: VaultWorld) {
   const db = new IndexDB(this.indexPath);
   const reader = new VaultReader();
-  t10ReconcileCount = reconcile(db, reader, this.vaultPath);
+  t10ReconcileResult = reconcile(db, reader, this.vaultPath);
   db.close();
 });
 
@@ -40,11 +40,17 @@ Then("the memory is present in the SQLite index", function (this: VaultWorld) {
   if (found === null) throw new Error(`Memory ${this.lastReadMemory.id} not found in index`);
 });
 
-Then("reconcile returns a count of {int}", function (this: VaultWorld, expected: number) {
-  if (t10ReconcileCount !== expected) {
-    throw new Error(`Expected reconcile count ${expected}, got ${t10ReconcileCount}`);
-  }
-});
+Then(
+  "reconcile returns inserted count of {int} and deleted count of {int}",
+  function (this: VaultWorld, expectedInserted: number, expectedDeleted: number) {
+    if (t10ReconcileResult.inserted !== expectedInserted) {
+      throw new Error(`Expected inserted ${expectedInserted}, got ${t10ReconcileResult.inserted}`);
+    }
+    if (t10ReconcileResult.deleted !== expectedDeleted) {
+      throw new Error(`Expected deleted ${expectedDeleted}, got ${t10ReconcileResult.deleted}`);
+    }
+  },
+);
 
 Given(
   "a vault with one memory file and an SQLite index containing that memory",
@@ -81,7 +87,7 @@ Given(
 When("vault-cli index rebuild is simulated via reconcile", function (this: VaultWorld) {
   const db = new IndexDB(this.indexPath);
   const reader = new VaultReader();
-  t10ReconcileCount = reconcile(db, reader, this.vaultPath);
+  t10ReconcileResult = reconcile(db, reader, this.vaultPath);
   db.close();
 });
 

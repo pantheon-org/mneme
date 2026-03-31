@@ -285,9 +285,12 @@ index. Memories with `human_edited_at` set are never overwritten by automated re
 
 The capture pipeline writes to the vault first (`VaultWriter.write`) then to SQLite (`IndexDB.upsert`). These two operations are not wrapped in a single transaction, so a crash between them leaves the vault and SQLite index diverged.
 
-**Recovery mechanism:** `reconcile(db, reader, vaultPath)` scans the three tier directories (`01-episodic/`, `02-semantic/`, `03-procedural/`) for `.md` files, checks for each whether a row exists in SQLite by `id`, and inserts any missing rows. It is guarded by a fast file-count vs row-count pre-check and returns early when the counts already match.
+**Recovery mechanism:** `reconcile(db, reader, vaultPath)` scans the three tier directories (`01-episodic/`, `02-semantic/`, `03-procedural/`) for `.md` files and performs two operations:
 
-`reconcile` is called automatically on VaultCore initialisation (in both the CLI core loader and the hook core loader). It can also be triggered manually via `vault-cli index`, which performs a full vault scan and additionally removes stale index rows for vault files that no longer exist.
+- **Insert** rows for vault files that have no corresponding SQLite row (by `id`)
+- **Delete** SQLite rows whose `file_path` no longer exists on disk (orphaned rows)
+
+It returns `{ inserted: number, deleted: number }`. `reconcile` is called automatically on VaultCore initialisation (in both the CLI core loader and the hook core loader). It can also be triggered manually via `vault-cli index`.
 
 **Recovery procedure (manual):**
 
@@ -295,4 +298,4 @@ The capture pipeline writes to the vault first (`VaultWriter.write`) then to SQL
 vault-cli index
 ```
 
-This command reads every `.md` file under `vault_path`, upserts each into SQLite, and removes rows whose corresponding vault file has been deleted.
+This command reads every `.md` file under `vault_path`, upserts each into SQLite, and removes rows whose corresponding vault file has been deleted. Both insert and delete counts are logged.

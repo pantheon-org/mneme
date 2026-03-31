@@ -115,13 +115,17 @@ export class Adjudicator {
         stdout: "pipe",
         stderr: "ignore",
       });
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => {
+      let timerId: Timer;
+      const timeout = new Promise<never>((_, reject) => {
+        timerId = setTimeout(() => {
           proc.kill();
           reject(new Error("inference timeout"));
-        }, this.timeoutMs),
-      );
-      const stdout = await Promise.race([new Response(proc.stdout).text(), timeout]);
+        }, this.timeoutMs);
+      });
+      const stdout = await Promise.race([
+        new Response(proc.stdout).text().finally(() => clearTimeout(timerId)),
+        timeout,
+      ]);
       const exit = await proc.exited;
       if (exit !== 0) return {};
       return JSON.parse(stdout.trim()) as Record<string, unknown>;

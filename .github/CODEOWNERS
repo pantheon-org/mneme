@@ -1,0 +1,7 @@
+# Default owner for everything
+* @thoroc
+
+# CI and governance must always be reviewed by the owner
+.github/ @thoroc
+AGENTS.md @thoroc
+CLAUDE.md @thoroc

@@ -1,19 +1,19 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AuditLog } from "../storage/audit-log.js";
 import { Adjudicator } from "./adjudicator.js";
 
-const makeAudit = (): AuditLog => {
+const makeAudit = async (): Promise<AuditLog> => {
   const dir = join(tmpdir(), `audit-test-${Date.now()}`);
-  mkdirSync(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
   return new AuditLog(join(dir, "audit.jsonl"));
 };
 
 describe("Adjudicator.callInference timeout", () => {
   it("resolves to {} when subprocess exceeds timeout", async () => {
-    const adj = new Adjudicator("sleep 10", makeAudit(), 100);
+    const adj = new Adjudicator("sleep 10", await makeAudit(), 100);
     const start = Date.now();
     const result = await adj.resolveConflict(
       {

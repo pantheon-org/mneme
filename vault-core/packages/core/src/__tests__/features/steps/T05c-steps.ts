@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Given, Then, When } from "@cucumber/cucumber";
-import type { Memory, MemoryCategory, MemoryScope } from "@vault-core/types";
+import type { Memory } from "@vault-core/types";
 import { Adjudicator } from "../../../consolidation/adjudicator.js";
 import { Proposer } from "../../../consolidation/proposer.js";
 import { AuditLog } from "../../../storage/audit-log.js";
@@ -14,30 +14,6 @@ class AlwaysNullAdjudicator extends Adjudicator {
   }
   override async consolidate(_cluster: Memory[]) {
     return null;
-  }
-}
-
-class OneProposalAdjudicator extends Adjudicator {
-  private called = false;
-  constructor(auditPath: string) {
-    super("echo", new AuditLog(auditPath));
-  }
-  override async consolidate(cluster: Memory[]) {
-    if (!this.called) {
-      this.called = true;
-      return null;
-    }
-    return {
-      id: `prop_second_${Date.now().toString(36)}`,
-      status: "pending" as const,
-      sourceMemoryIds: cluster.map((m) => m.id),
-      proposedContent: "Consolidated.",
-      proposedSummary: "Second cluster",
-      proposedTags: [],
-      proposedCategory: "discovery" as MemoryCategory,
-      proposedScope: "user" as MemoryScope,
-      createdAt: new Date().toISOString(),
-    };
   }
 }
 

@@ -7,6 +7,7 @@ import { MIGRATE_COLUMNS, SCHEMA_STATEMENTS } from "./index-db-schema.js";
 import {
   deleteMemory,
   incrementFrequency,
+  rowCount,
   updateStatus,
   upsert,
   upsertVector,
@@ -114,6 +115,9 @@ export class IndexDB {
 
   allIds(): string[] {
     return (this.db.prepare("SELECT id FROM memories").all() as { id: string }[]).map((r) => r.id);
+  }
+  rowCount(): number {
+    return rowCount(this.db);
   }
   close(): void {
     this.db.close();

@@ -1,0 +1,96 @@
+import { mkdirSync } from "node:fs";
+import { After, Before, Given, Then, When } from "@cucumber/cucumber";
+import { IndexDB } from "../../../storage/index-db.js";
+import { reconcile } from "../../../storage/index-db-reconcile.js";
+import { VaultReader } from "../../../storage/vault-reader.js";
+import { VaultWriter } from "../../../storage/vault-writer.js";
+import { makeMemory, type VaultWorld } from "./world.js";
+
+Before({ tags: "@T10" }, function (this: VaultWorld) {
+  this.setup();
+});
+After({ tags: "@T10" }, function (this: VaultWorld) {
+  this.cleanup();
+});
+
+let t10ReconcileCount = 0;
+
+Given("a vault with one memory file and an empty SQLite index", function (this: VaultWorld) {
+  mkdirSync(this.vaultPath, { recursive: true });
+  const writer = new VaultWriter(this.vaultPath);
+  const mem = makeMemory({ summary: "crash recovery test" });
+  mem.filePath = writer.resolveFilePath(mem);
+  writer.write(mem);
+  this.lastReadMemory = mem;
+});
+
+When("reconcile is called with the vault path", function (this: VaultWorld) {
+  const db = new IndexDB(this.indexPath);
+  const reader = new VaultReader();
+  t10ReconcileCount = reconcile(db, reader, this.vaultPath);
+  db.close();
+});
+
+Then("the memory is present in the SQLite index", function (this: VaultWorld) {
+  const db = new IndexDB(this.indexPath);
+  if (!this.lastReadMemory) throw new Error("No memory stored in world");
+  const found = db.getById(this.lastReadMemory.id);
+  db.close();
+  if (found === null) throw new Error(`Memory ${this.lastReadMemory.id} not found in index`);
+});
+
+Then("reconcile returns a count of {int}", function (this: VaultWorld, expected: number) {
+  if (t10ReconcileCount !== expected) {
+    throw new Error(`Expected reconcile count ${expected}, got ${t10ReconcileCount}`);
+  }
+});
+
+Given(
+  "a vault with one memory file and an SQLite index containing that memory",
+  function (this: VaultWorld) {
+    mkdirSync(this.vaultPath, { recursive: true });
+    const writer = new VaultWriter(this.vaultPath);
+    const db = new IndexDB(this.indexPath);
+    const mem = makeMemory({ summary: "already indexed memory" });
+    mem.filePath = writer.resolveFilePath(mem);
+    writer.write(mem);
+    db.upsert(mem);
+    db.close();
+    this.lastReadMemory = mem;
+  },
+);
+
+Given("a vault containing one written memory", function (this: VaultWorld) {
+  mkdirSync(this.vaultPath, { recursive: true });
+  const writer = new VaultWriter(this.vaultPath);
+  const mem = makeMemory({ summary: "vault write before crash" });
+  mem.filePath = writer.resolveFilePath(mem);
+  writer.write(mem);
+  this.lastReadMemory = mem;
+});
+
+Given(
+  "the SQLite index is empty, simulating a crash after vault write but before DB upsert",
+  function (this: VaultWorld) {
+    const db = new IndexDB(this.indexPath);
+    db.close();
+  },
+);
+
+When("vault-cli index rebuild is simulated via reconcile", function (this: VaultWorld) {
+  const db = new IndexDB(this.indexPath);
+  const reader = new VaultReader();
+  t10ReconcileCount = reconcile(db, reader, this.vaultPath);
+  db.close();
+});
+
+Then("the memory is searchable in the SQLite index", function (this: VaultWorld) {
+  if (!this.lastReadMemory) throw new Error("No memory stored in world");
+  const db = new IndexDB(this.indexPath);
+  const results = db.bm25Search("vault write before crash", 5);
+  db.close();
+  if (results.length === 0) throw new Error("Expected at least 1 BM25 result after reconcile");
+  if (!results.some((r) => r.id === this.lastReadMemory?.id)) {
+    throw new Error(`Memory ${this.lastReadMemory.id} not found in BM25 results`);
+  }
+});

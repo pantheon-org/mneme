@@ -8,6 +8,7 @@ import {
   IndexDB,
   Injector,
   loadConfig,
+  reconcile,
   Scorer,
   VaultReader,
   VaultWriter,
@@ -40,6 +41,7 @@ export const loadHookCore = (): HookCore => {
   const retriever = new HybridRetriever(db, embedder);
   const injector = new Injector();
 
+  reconcile(db, reader, config.vault_path);
   cached = { queue, retriever, injector, reader, db };
   return cached;
 };

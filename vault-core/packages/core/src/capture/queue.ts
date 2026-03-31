@@ -117,7 +117,12 @@ export class CaptureQueue {
 
   async flush(): Promise<void> {
     while (this.queue.length > 0) {
+      const before = this.queue.length;
       await this.processBatch();
+      if (this.queue.length === before) {
+        // yield to let the in-flight batch complete
+        await Bun.sleep(10);
+      }
     }
   }
 

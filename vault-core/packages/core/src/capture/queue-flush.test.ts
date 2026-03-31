@@ -66,25 +66,32 @@ describe("CaptureQueue.flush()", () => {
     await expect(queue.flush()).resolves.toBeUndefined();
   });
 
-  it("back-off yields when processBatch does no work due to in-flight guard", async () => {
-    type Internal = { processBatch: () => Promise<void>; processing: boolean };
+  it("calls Bun.sleep when processBatch makes no progress", async () => {
+    type Internal = { processBatch: () => Promise<void> };
     const internal = queue as unknown as Internal;
 
-    internal.processing = true;
+    const origProcessBatch = internal.processBatch.bind(queue);
+    let callCount = 0;
+    internal.processBatch = mock(async () => {
+      callCount++;
+      if (callCount < 3) return;
+      await origProcessBatch();
+    });
+
     queue.capture(makeInput());
 
-    let backOffOccurred = false;
+    const sleepCalls: number[] = [];
     const origSleep = Bun.sleep.bind(Bun);
     const sleepSpy = mock(async (ms: number) => {
-      backOffOccurred = true;
-      internal.processing = false;
-      return origSleep(ms);
+      sleepCalls.push(ms);
+      return origSleep(1);
     });
     (Bun as unknown as { sleep: typeof sleepSpy }).sleep = sleepSpy;
 
     await queue.flush();
 
-    expect(backOffOccurred).toBe(true);
+    expect(sleepCalls.length).toBeGreaterThan(0);
+    expect(sleepCalls[0]).toBe(10);
 
     (Bun as unknown as { sleep: typeof origSleep }).sleep = origSleep;
   });

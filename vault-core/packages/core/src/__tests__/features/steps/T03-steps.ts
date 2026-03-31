@@ -12,6 +12,11 @@ After({ tags: "@T03" }, function (this: VaultWorld) {
   this.cleanup();
 });
 
+const getReader = (world: VaultWorld): VaultReader => {
+  if (world.t03Reader === null) throw new Error("t03Reader not initialised");
+  return world.t03Reader;
+};
+
 Given("a memory written to the vault with an old modification time", function (this: VaultWorld) {
   this.t03Writer = new VaultWriter(this.vaultPath);
   this.t03Reader = new VaultReader();
@@ -22,6 +27,7 @@ Given("a memory written to the vault with an old modification time", function (t
     updatedAt: pastDate,
     capturedAt: pastDate,
   });
+  if (this.t03Writer === null) throw new Error("t03Writer not initialised");
   mem.filePath = this.t03Writer.resolveFilePath(mem);
   this.t03Writer.write(mem);
   const pastTime = new Date(Date.parse(pastDate));
@@ -33,7 +39,7 @@ Given("a memory written to the vault with an old modification time", function (t
 When(
   "the vault file is modified externally with a new modification time",
   function (this: VaultWorld) {
-    const firstRead = this.t03Reader!.read(this.t03FilePath);
+    const firstRead = getReader(this).read(this.t03FilePath);
     if (firstRead.humanEditedAt !== null) {
       throw new Error("Expected first read (before edit) humanEditedAt to be null");
     }
@@ -44,7 +50,7 @@ When(
 );
 
 Then("reading the memory sets humanEditedAt to a non-null value", function (this: VaultWorld) {
-  const read = this.t03Reader!.read(this.t03FilePath);
+  const read = getReader(this).read(this.t03FilePath);
   if (read.humanEditedAt === null) throw new Error("humanEditedAt should not be null after edit");
   if (typeof read.humanEditedAt !== "string") throw new Error("humanEditedAt should be a string");
 });
@@ -59,6 +65,7 @@ Given("a memory written to the vault", function (this: VaultWorld) {
     updatedAt: pastDate,
     capturedAt: pastDate,
   });
+  if (this.t03Writer === null) throw new Error("t03Writer not initialised");
   mem.filePath = this.t03Writer.resolveFilePath(mem);
   this.t03Writer.write(mem);
   const pastTime = new Date(Date.parse(pastDate));
@@ -72,12 +79,12 @@ When("the vault file is modified externally", function (this: VaultWorld) {
 });
 
 When("the memory is read once to detect the edit", function (this: VaultWorld) {
-  const read1 = this.t03Reader!.read(this.t03FilePath);
+  const read1 = getReader(this).read(this.t03FilePath);
   this.firstHumanEditedAt = read1.humanEditedAt ?? null;
 });
 
 Then("reading the memory again returns the same humanEditedAt value", function (this: VaultWorld) {
-  const read2 = this.t03Reader!.read(this.t03FilePath);
+  const read2 = getReader(this).read(this.t03FilePath);
   if (read2.humanEditedAt !== this.firstHumanEditedAt) {
     throw new Error(`humanEditedAt changed: ${this.firstHumanEditedAt} !== ${read2.humanEditedAt}`);
   }
@@ -86,7 +93,7 @@ Then("reading the memory again returns the same humanEditedAt value", function (
 When(
   "the memory is read once so humanEditedAt is detected and persisted",
   function (this: VaultWorld) {
-    const read = this.t03Reader!.read(this.t03FilePath);
+    const read = getReader(this).read(this.t03FilePath);
     this.firstHumanEditedAt = read.humanEditedAt ?? null;
     if (this.firstHumanEditedAt === null) {
       throw new Error("Expected humanEditedAt to be detected after external edit");
@@ -110,7 +117,7 @@ When(
 Then(
   "reading the memory again still returns the original humanEditedAt value",
   function (this: VaultWorld) {
-    const read = this.t03Reader!.read(this.t03FilePath);
+    const read = getReader(this).read(this.t03FilePath);
     if (read.humanEditedAt !== this.firstHumanEditedAt) {
       throw new Error(
         `humanEditedAt changed after re-write: expected ${this.firstHumanEditedAt}, got ${read.humanEditedAt}`,

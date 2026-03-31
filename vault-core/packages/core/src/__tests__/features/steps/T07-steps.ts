@@ -105,3 +105,21 @@ Then("excluded sentinels do not appear in the markdown output", function (this: 
     }
   }
 });
+
+Given(
+  "a single oversized memory with {int} characters of content",
+  function (this: VaultWorld, chars: number) {
+    this.rankedMems = [
+      makeRankedMemory(
+        makeMemory({ summary: "Large content memory", content: "X".repeat(chars) }),
+        1.0,
+      ),
+    ];
+  },
+);
+
+Then("either 0 or 1 memories are included", function (this: VaultWorld) {
+  if (this.memoriesIncluded < 0 || this.memoriesIncluded > 1) {
+    throw new Error(`Expected 0 or 1 memories included, got ${this.memoriesIncluded}`);
+  }
+});

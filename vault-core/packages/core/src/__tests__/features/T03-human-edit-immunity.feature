@@ -19,3 +19,10 @@ Feature: Human Edit Immunity
     Given a human-edited memory stored in the vault and index
     When applyApproved is called for a proposal referencing that memory
     Then the vault file for the human-edited memory is not modified
+
+  Scenario: Does not re-set humanEditedAt when a subsequent write has an older mtime
+    Given a memory written to the vault with an old modification time
+    When the vault file is modified externally with a new modification time
+    And the memory is read once so humanEditedAt is detected and persisted
+    And the memory is re-written by another session with an older mtime
+    Then reading the memory again still returns the original humanEditedAt value

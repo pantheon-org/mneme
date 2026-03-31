@@ -25,3 +25,8 @@ Feature: Memory Retrieval Ranking
     Given an index database with several memories
     When memories are retrieved with topK of 3
     Then at most 3 results are returned
+
+  Scenario: RRF correctly combines overlapping BM25 and vector results
+    Given an index database with 5 memories with both text and vector content
+    When memories are retrieved with both BM25 and vector embeddings for query "typescript bun"
+    Then the memory present in both BM25 and vector results ranks highest

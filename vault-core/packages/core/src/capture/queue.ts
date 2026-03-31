@@ -1,5 +1,5 @@
 import {
-  appendFile,
+  appendFileSync,
   existsSync,
   readFileSync,
   renameSync,
@@ -33,6 +33,7 @@ export class CaptureQueue {
     private readonly writer: VaultWriter,
     private readonly db: IndexDB,
     private readonly audit: AuditLog,
+    private readonly pendingPath = PENDING_PATH,
   ) {
     this.replayPending();
     this.timer = setInterval(() => {
@@ -44,17 +45,17 @@ export class CaptureQueue {
   capture(input: CaptureInput): void {
     const entry: CaptureInput = { ...input, enqueuedAt: new Date().toISOString() };
     this.queue.push(entry);
-    void appendFile(PENDING_PATH, `${JSON.stringify(entry)}\n`, "utf-8", () => undefined);
+    appendFileSync(this.pendingPath, `${JSON.stringify(entry)}\n`, "utf-8");
   }
 
   private replayPending(): void {
-    const recoveryPath = `${PENDING_PATH}.recovering`;
+    const recoveryPath = `${this.pendingPath}.recovering`;
     if (existsSync(recoveryPath)) {
       this.replayFromFile(recoveryPath);
       unlinkSync(recoveryPath);
     }
-    if (!existsSync(PENDING_PATH)) return;
-    renameSync(PENDING_PATH, recoveryPath);
+    if (!existsSync(this.pendingPath)) return;
+    renameSync(this.pendingPath, recoveryPath);
     this.replayFromFile(recoveryPath);
     unlinkSync(recoveryPath);
   }
@@ -108,7 +109,7 @@ export class CaptureQueue {
       }
 
       if (this.queue.length === 0) {
-        writeFileSync(PENDING_PATH, "", "utf-8");
+        writeFileSync(this.pendingPath, "", "utf-8");
       }
     } finally {
       this.processing = false;

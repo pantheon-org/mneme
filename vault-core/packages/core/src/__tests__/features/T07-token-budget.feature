@@ -27,3 +27,9 @@ Feature: Token Budget
     When the injector formats sentinel memories with a budget of 300 tokens
     Then included sentinels appear in the markdown output
     And excluded sentinels do not appear in the markdown output
+
+  Scenario: Large memory content does not exceed token budget by more than 20%
+    Given a single oversized memory with 51200 characters of content
+    When the injector formats memories with a budget of 500 tokens
+    Then the token estimate is at most 600
+    And either 0 or 1 memories are included

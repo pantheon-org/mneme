@@ -15,8 +15,8 @@
     "install:cli": "bun run --cwd packages/cli install-global",
     "lint": "bunx --bun biome check .",
     "lint:fix": "bunx --bun biome check --write .",
-    "lint:md": "bunx markdownlint-cli2 \"../**/*.md\" \"#node_modules\" \"#dist\" \"#../.tessl\" \"#../.context\"",
-    "lint:md:fix": "bunx markdownlint-cli2 --fix \"../**/*.md\" \"#node_modules\" \"#dist\" \"#../.tessl\" \"#../.context\"",
+    "lint:md": "bunx markdownlint-cli2 --config ../.markdownlint-cli2.jsonc \"../**/*.md\" \"#node_modules\" \"#dist\" \"#../.tessl\" \"#../.context\"",
+    "lint:md:fix": "bunx markdownlint-cli2 --fix --config ../.markdownlint-cli2.jsonc \"../**/*.md\" \"#node_modules\" \"#dist\" \"#../.tessl\" \"#../.context\"",
     "format": "bunx --bun biome format --write ."
   },
   "devDependencies": {

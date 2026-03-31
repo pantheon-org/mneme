@@ -31,7 +31,6 @@ jobs:
 
       - name: Markdown lint
         run: bun run lint:md
-        working-directory: ${{ github.workspace }}
 
   typecheck:
     name: Typecheck

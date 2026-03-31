@@ -28,7 +28,7 @@ const makeMemory = (overrides: Partial<Memory> = {}): Memory => ({
 });
 
 const makeSimilarEmbedding = (base: number[]): number[] =>
-  base.map((v) => v + Math.random() * 0.001); // nosemgrep: node_insecure_random_generator
+  base.map((v) => v + Math.random() * 0.001);
 
 const makeDb = (memories: Memory[]): IndexDB =>
   ({ getByTier: (_tier: string, _projectId?: string) => memories }) as unknown as IndexDB;

@@ -5,6 +5,7 @@ Thank you for your interest in contributing to vault-core.
 ## Prerequisites
 
 - [Bun](https://bun.sh) >= 1.0
+- Python >= 3.8 + pip (for `semgrep` security scanning — `pip install semgrep==1.156.0`)
 - TypeScript knowledge (strict mode)
 - Familiarity with SQLite
 - Claude Code or OpenCode for testing hooks end-to-end
